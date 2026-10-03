@@ -1,0 +1,8 @@
+# Dependencias de ejecución de FingerMusic (probado con Python 3.11 y 3.12).
+# mediapipe 0.10.21 es la última versión que incluye la API clásica
+# `mediapipe.solutions.hands` con el modelo embebido (ver docs/decisiones_tecnicas.md).
+# mediapipe instala además protobuf, matplotlib, etc. como dependencias transitivas.
+mediapipe==0.10.21
+opencv-contrib-python==4.11.0.86
+numpy==1.26.4
+pygame==2.6.1

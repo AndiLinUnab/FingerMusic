@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FingerMusic",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "FingerMusic (debug)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "args": ["--debug"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

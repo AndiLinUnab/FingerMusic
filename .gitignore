@@ -1,0 +1,45 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Pruebas y herramientas
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+
+# Logs y temporales
+logs/
+*.log
+*.tmp
+*.bak
+
+# Visual Studio Code: solo se comparten launch.json y settings.json
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+
+# JetBrains / SO
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Capturas y videos personales (conserva la carpeta con .gitkeep)
+screenshots/*
+!screenshots/.gitkeep
