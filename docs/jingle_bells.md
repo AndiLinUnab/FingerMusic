@@ -30,7 +30,7 @@ La nota **suena siempre**, acierte o no. Entrar al modo canción o pulsar `R` re
 
 ## Dedos necesarios
 
-DO → pulgar, RE → índice, MI → medio, FA → anular, SOL → meñique (mano izquierda; o la derecha con `H`).
+Mano izquierda: DO → meñique, RE → anular, MI → medio, FA → índice, SOL → pulgar (así suben de izquierda a derecha en pantalla). Con `H` se usa la mano derecha: DO → pulgar … SOL → meñique.
 
 ## Cambiar la canción
 

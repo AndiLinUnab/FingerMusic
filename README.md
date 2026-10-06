@@ -3,6 +3,7 @@
 **Instrumento musical virtual mediante visión por computador**
 
 ![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue)
+![Licencia](https://img.shields.io/badge/licencia-MIT-green)
 ![Pruebas](https://img.shields.io/badge/pruebas-pytest-informational)
 
 ## Descripción
@@ -23,14 +24,14 @@ preentrenado (sin entrenar ninguna red desde cero).
 ## Características
 
 - Detección de hasta **dos manos** en tiempo real con un modelo preentrenado.
-- **10 notas** (DO4 a MI5): mano izquierda = DO–SOL, mano derecha = LA–MI'.
+- **10 notas** (DO4 a MI5) que **suben de izquierda a derecha en pantalla**: mano izquierda = DO–SOL, mano derecha = LA–MI'.
 - Detección de flexión por **ángulos y distancias** (no por una simple comparación de coordenadas).
 - **Transición de estado** EXTENDIDO → FLEXIONADO: una nota por pulsación, sin repeticiones.
 - Suavizado, histéresis, confirmación por frames y cooldown configurables.
 - **Calibración** de la posición de reposo de cada usuario.
 - **Modo libre** y **modo canción** (Jingle Bells) con nota actual, siguiente, progreso y acierto/error.
 - Audio sin Internet y **sin material con copyright**: los tonos se generan por síntesis.
-- Interfaz con botones, atajos de teclado, estado de cada dedo y landmarks dibujados.
+- Interfaz juguetona: cada nota tiene su color, las tarjetas rebotan al tocar, salen notas y chispas del dedo y hay confeti al completar la canción.
 - Manejo de errores (cámara, modelo, audio) con mensajes claros, logging y pruebas automáticas.
 
 ## Tecnologías utilizadas
@@ -146,13 +147,12 @@ Opciones: `--camera N` (otra cámara), `--swap-hands`, `--debug`, `--regenerate-
 Con la mano abierta, **dobla un dedo hacia la palma y vuelve a abrirlo**. La nota suena en el
 instante en que el dedo pasa de extendido a flexionado; mantenerlo abajo no repite la nota.
 
-| Dedo | Mano izquierda | Mano derecha |
-|---|---|---|
-| Pulgar | DO | LA |
-| Índice | RE | SI |
-| Medio | MI | DO' |
-| Anular | FA | RE' |
-| Meñique | SOL | MI' |
+Las notas suben de **izquierda a derecha tal como ves tus manos en pantalla** (vista espejo):
+
+| Mano | De izquierda a derecha en pantalla |
+|---|---|
+| Izquierda | Meñique **DO** · Anular **RE** · Medio **MI** · Índice **FA** · Pulgar **SOL** |
+| Derecha | Pulgar **LA** · Índice **SI** · Medio **DO'** · Anular **RE'** · Meñique **MI'** |
 
 Con **una sola mano** tienes 5 notas (DO–SOL con la izquierda; con `H` o `--swap-hands` también
 con la derecha). Para las 10 notas se usan las dos manos. Jingle Bells solo necesita DO–SOL.
@@ -184,7 +184,7 @@ FingerMusic/
 │   ├── ui/                 # interfaz OpenCV
 │   ├── config/             # parámetros centralizados
 │   └── utils/              # funciones matemáticas y logging
-├── tests/                  # pytest (83 pruebas)
+├── tests/                  # pytest (86 pruebas)
 ├── assets/sounds/          # 10 notas .wav generadas por el propio programa
 ├── docs/                   # documentación técnica
 └── screenshots/            # capturas para la demostración
@@ -271,7 +271,7 @@ pytest
 ruff check .
 ```
 
-Hay 83 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
+Hay 86 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
 confirmación), calibración, conversión de landmarks, mapeo dedo → nota, secuencia y avance de
 Jingle Bells, reinicio, configuración, síntesis y gestor de audio (con el driver `dummy`).
 Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámara real**.
@@ -280,7 +280,7 @@ Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámar
 
 Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvfb, sin cámara ni audio físicos):
 
-- ✅ Entorno virtual, instalación de `requirements.txt` y 83 pruebas aprobadas; `ruff` sin errores.
+- ✅ Entorno virtual, instalación de `requirements.txt` y 86 pruebas aprobadas; `ruff` sin errores.
 - ✅ El modelo MediaPipe Hands carga y procesa frames.
 - ✅ La aplicación inicia, abre la ventana, cambia de modo, calibra, activa/detiene la cámara y se cierra con código 0 (con una cámara simulada solo para esta verificación).
 - ✅ Sin cámara, muestra un mensaje claro y no se cierra.
@@ -292,6 +292,10 @@ Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvf
 - ⚠️ **Sonido audible** y su latencia real en Windows.
 - ⚠️ Ejecución en **Windows con Python 3.11** (las versiones de `requirements.txt` tienen ruedas para esa plataforma, pero no se instalaron allí).
 - ⚠️ Clonar desde GitHub: se verificó una copia limpia del proyecto, no un clon real del repositorio.
+
+## Licencia
+
+[MIT](LICENSE) © 2026 Andi Lin.
 
 ## Autor
 

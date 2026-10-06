@@ -89,7 +89,7 @@ def test_two_hands_play_independently(engine: MusicEngine) -> None:
         ]
         played += engine.process(hands, driver.now).played
         driver.now += DT
-    assert sorted(p.note.label for p in played) == ["MI'", "RE"]
+    assert sorted(p.note.label for p in played) == ["FA", "MI'"]
 
 
 def test_swap_hands(engine: MusicEngine) -> None:
@@ -107,7 +107,7 @@ def test_free_mode_has_no_song_results(engine: MusicEngine) -> None:
 def test_song_mode_hit_and_miss(engine: MusicEngine) -> None:
     engine.set_mode(Mode.SONG)
     driver = Driver(engine)
-    wrong = driver.tap(Finger.INDEX)  # RE, pero se espera MI
+    wrong = driver.tap(Finger.INDEX)  # FA, pero se espera MI
     assert wrong[0].song_result is SongResult.MISS and engine.song_player.index == 0
     right = driver.tap(Finger.MIDDLE)  # MI
     assert right[0].song_result is SongResult.HIT and engine.song_player.index == 1
@@ -117,11 +117,11 @@ def test_play_the_first_phrase_of_the_song(engine: MusicEngine) -> None:
     engine.set_mode(Mode.SONG)
     driver = Driver(engine)
     finger_for = {
-        "do4": Finger.THUMB,
-        "re4": Finger.INDEX,
+        "do4": Finger.PINKY,
+        "re4": Finger.RING,
         "mi4": Finger.MIDDLE,
-        "fa4": Finger.RING,
-        "sol4": Finger.PINKY,
+        "fa4": Finger.INDEX,
+        "sol4": Finger.THUMB,
     }
     for key in build_jingle_bells().notes[:11]:
         played = driver.tap(finger_for[key])

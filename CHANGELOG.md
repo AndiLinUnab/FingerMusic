@@ -2,6 +2,14 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.1.1] - 2026-10-06
+
+### Changed
+
+- Mano izquierda: las notas siguen el orden visual de la mano (meñique DO … pulgar SOL) para que las 10 notas suban de izquierda a derecha en pantalla. Con `H` se conserva el orden ascendente.
+- Las tarjetas de dedos se dibujan en el orden real de cada mano.
+- Interfaz rediseñada: color por nota, tarjetas redondeadas con rebote, notas y chispas desde la punta del dedo, barra de progreso arcoíris y confeti al completar la canción.
+
 ## [0.1.0] - 2026-10-02
 
 ### Added
