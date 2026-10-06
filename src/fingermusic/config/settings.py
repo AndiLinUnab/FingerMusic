@@ -29,6 +29,9 @@ class CameraSettings:
     #: Espejar la imagen (efecto "selfie"). Necesario para que la
     #: lateralidad (mano izquierda/derecha) coincida con la del usuario.
     mirror: bool = True
+    #: Formato de video pedido a la cámara (4 letras). 'MJPG' evita el modo lento (~15 FPS)
+    #: de muchas cámaras en Windows. Déjalo vacío ('') para usar el formato por defecto.
+    fourcc: str = "MJPG"
     #: Frames fallidos consecutivos tolerados antes de dar la cámara por perdida.
     max_read_failures: int = 30
 
@@ -154,6 +157,8 @@ class Settings:
             raise ValueError("volume debe estar en [0, 1]")
         if self.camera.width <= 0 or self.camera.height <= 0:
             raise ValueError("Resolución de cámara inválida")
+        if self.camera.fourcc and len(self.camera.fourcc) != 4:
+            raise ValueError("fourcc debe tener exactamente 4 caracteres (o estar vacío)")
 
 
 def get_settings() -> Settings:

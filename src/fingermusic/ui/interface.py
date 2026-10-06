@@ -81,6 +81,7 @@ _FINGER_TIPS = {
 
 _BOUNCE_SECONDS = 0.3
 _BOUNCE_PIXELS = 9
+_STREAK_MILESTONE = 10  # cada cuántos aciertos seguidos hay confeti
 
 
 class Action(StrEnum):
@@ -141,6 +142,7 @@ class ViewState:
     song_progress: float = 0.0
     song_finished: bool = False
     streak: int = 0
+    best_streak: int = 0
     current_label: str | None = None
     next_label: str | None = None
     feedback: SongResult | None = None
@@ -171,6 +173,7 @@ class _Particle:
     size: int
     text: str | None = None
     gravity: float = 0.0
+    scale: float = 0.9
 
 
 def put_text(
@@ -273,6 +276,7 @@ class Interface:
         self._particles: list[_Particle] = []
         self._spawned: dict[tuple[HandSide, Finger], float] = {}
         self._was_finished = False
+        self._last_streak = 0
         self._last_render = time.monotonic()
         self._rng = random.Random(7)
 
@@ -438,24 +442,53 @@ class Interface:
                     )
                 )
 
-    def _update_confetti(self, state: ViewState) -> None:
-        """Lanza confeti al completar la canción."""
-        if state.song_finished and not self._was_finished and state.mode is Mode.SONG:
-            for _ in range(90):
-                self._particles.append(
-                    _Particle(
-                        self._rng.uniform(0, VIDEO_W),
-                        self._rng.uniform(-40, 10),
-                        self._rng.uniform(-30, 30),
-                        self._rng.uniform(40, 140),
-                        2.5,
-                        2.5,
-                        _hue_color(self._rng.random()),
-                        self._rng.randint(3, 6),
-                        gravity=60.0,
-                    )
+    def _spawn_confetti(self, count: int) -> None:
+        """Lanza ``count`` piezas de confeti desde la parte superior del video."""
+        for _ in range(count):
+            self._particles.append(
+                _Particle(
+                    self._rng.uniform(0, VIDEO_W),
+                    self._rng.uniform(-40, 10),
+                    self._rng.uniform(-30, 30),
+                    self._rng.uniform(40, 140),
+                    2.5,
+                    2.5,
+                    _hue_color(self._rng.random()),
+                    self._rng.randint(3, 6),
+                    gravity=60.0,
                 )
+            )
+
+    def _update_confetti(self, state: ViewState) -> None:
+        """Lanza confeti al completar la canción y cada ``_STREAK_MILESTONE`` aciertos seguidos."""
+        in_song = state.mode is Mode.SONG
+        if state.song_finished and not self._was_finished and in_song:
+            self._spawn_confetti(90)
         self._was_finished = state.song_finished
+
+        reached_milestone = (
+            in_song
+            and state.streak > self._last_streak
+            and state.streak > 0
+            and state.streak % _STREAK_MILESTONE == 0
+        )
+        if reached_milestone:
+            self._spawn_confetti(60)
+            self._particles.append(
+                _Particle(
+                    VIDEO_W / 2,
+                    VIDEO_H / 2,
+                    0.0,
+                    -40.0,
+                    1.6,
+                    1.6,
+                    _hue_color((state.streak // _STREAK_MILESTONE) * 0.17),
+                    2,
+                    text=f"RACHA x{state.streak}!",
+                    scale=1.5,
+                )
+            )
+        self._last_streak = state.streak
 
     def _draw_particles(self, area: np.ndarray, dt: float) -> None:
         alive: list[_Particle] = []
@@ -469,7 +502,8 @@ class Interface:
             fade = p.life / p.max_life
             color = blend(p.color, (40, 30, 36), 0.35 + 0.65 * fade)
             if p.text is not None:
-                put_text(area, p.text, (int(p.x) - 16, int(p.y)), 0.9, color, 2)
+                (text_w, _), _ = cv2.getTextSize(p.text, FONT, p.scale, 2)
+                put_text(area, p.text, (int(p.x) - text_w // 2, int(p.y)), p.scale, color, 2)
             else:
                 cv2.circle(area, (int(p.x), int(p.y)), p.size, color, -1, cv2.LINE_AA)
             alive.append(p)
@@ -579,6 +613,7 @@ class Interface:
 
     def _draw_song_panel(self, canvas: np.ndarray, state: ViewState, x0: int, y0: int) -> None:
         put_text(canvas, state.song_title, (x0 + 16, y0 + 55), 0.55, TEXT)
+        self._draw_best_streak(canvas, state, x0 + 175, y0 + 55)
         if state.song_finished:
             put_text(canvas, "COMPLETADA!", (x0 + 16, y0 + 118), 1.1, GREEN, 3)
             put_text(canvas, "Pulsa REINICIAR (R)", (x0 + 16, y0 + 150), 0.5, TEXT_DIM)
@@ -609,6 +644,12 @@ class Interface:
         hit = state.feedback in (SongResult.HIT, SongResult.FINISHED)
         pop = max(0.0, 1.0 - state.feedback_age / _BOUNCE_SECONDS) if hit else 0.0
         put_text(canvas, f"RACHA x{state.streak}", (x, y), 0.5 + 0.15 * pop, color, 2)
+
+    def _draw_best_streak(self, canvas: np.ndarray, state: ViewState, x: int, y: int) -> None:
+        """Mejor racha de la sesión; se resalta mientras la racha actual la iguala."""
+        is_record = state.best_streak > 0 and state.streak == state.best_streak
+        color = YELLOW if is_record else TEXT_DIM
+        put_text(canvas, f"MEJOR x{state.best_streak}", (x, y), 0.5, color, 2 if is_record else 1)
 
     def _draw_feedback_box(self, canvas: np.ndarray, state: ViewState, x0: int, y0: int) -> None:
         box = (x0 + 100, y0 + 210, SIDEBAR_W - 116, 32)

@@ -16,6 +16,7 @@ from fingermusic.music.jingle_bells import build_jingle_bells
 from fingermusic.music.song_player import SongResult
 from fingermusic.ui.interface import Action, Interface, ViewState
 from fingermusic.utils.helpers import exponential_smoothing
+from fingermusic.utils.perf import PerformanceMonitor
 from fingermusic.vision.hand_detector import HandDetector, HandDetectorError
 from fingermusic.vision.landmarks import Finger, HandSide
 
@@ -47,6 +48,8 @@ class Application:
         self._last_result = FrameResult()
         self._fps = 0.0
         self._detection_errors = 0
+        self._perf = PerformanceMonitor()
+        self._perf_reported = False
 
         self._press_times: dict[tuple[HandSide, Finger], float] = {}
         self._last_note_label: str | None = None
@@ -74,8 +77,12 @@ class Application:
                 )
                 previous = now
                 self._step(now)
-                for action in self._ui.poll_actions():
+                started = time.perf_counter()
+                actions = self._ui.poll_actions()
+                self._perf.record("teclado", time.perf_counter() - started)
+                for action in actions:
                     self._handle_action(action, now)
+                self._report_performance(time.monotonic())
         finally:
             self._shutdown()
         return 0
@@ -90,11 +97,29 @@ class Application:
     # --- Un frame ---------------------------------------------------------
     def _step(self, now: float) -> None:
         if self._camera_on:
+            started = time.perf_counter()
             frame = self._read_frame()
+            self._perf.record("camara", time.perf_counter() - started)
             if frame is not None:
                 self._last_frame = frame
                 self._last_result = self._analyze(frame, now)
+        started = time.perf_counter()
         self._ui.show(self._ui.render(self._last_frame, self._build_state(now)))
+        self._perf.record("interfaz", time.perf_counter() - started)
+
+    def _report_performance(self, now: float) -> None:
+        """Registra el rendimiento: INFO la primera vez o si va lento; DEBUG si todo va bien."""
+        self._perf.end_frame(now)
+        if not self._camera_on:
+            return
+        report = self._perf.report(now)
+        if report is None:
+            return
+        level = logging.DEBUG if self._perf_reported and not report.slow else logging.INFO
+        logger.log(level, "%s", report.summary())
+        if report.slow:
+            logger.warning("FPS bajos. %s", report.advice)
+        self._perf_reported = True
 
     def _read_frame(self) -> np.ndarray | None:
         try:
@@ -106,6 +131,7 @@ class Application:
             return None
 
     def _analyze(self, frame: np.ndarray, now: float) -> FrameResult:
+        started = time.perf_counter()
         try:
             hands = self._detector.detect(frame)
             self._detection_errors = 0
@@ -117,6 +143,8 @@ class Application:
                 self._set_message("El modelo de manos fallo repetidamente. Revisa los logs.", True)
             hands = []
 
+        self._perf.record("modelo", time.perf_counter() - started)
+        started = time.perf_counter()
         result = self._engine.process(hands, now)
         for played in result.played:
             self._audio.play(played.note.key)
@@ -133,6 +161,7 @@ class Application:
                     self._set_message(f"Racha de {played.streak} aciertos seguidos!")
         if result.message:
             self._set_message(result.message, error="fallida" in result.message)
+        self._perf.record("motor", time.perf_counter() - started)
         return result
 
     # --- Acciones ---------------------------------------------------------
@@ -232,6 +261,7 @@ class Application:
             song_progress=player.progress,
             song_finished=player.finished,
             streak=self._engine.streak,
+            best_streak=self._engine.best_streak,
             current_label=label(current),
             next_label=label(upcoming),
             feedback=self._feedback,

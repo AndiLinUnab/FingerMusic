@@ -79,6 +79,7 @@ class MusicEngine:
         self._mode = Mode.FREE
         self._song_player = SongPlayer(song)
         self._streak = 0
+        self._best_streak = 0
         self._calibration: CalibrationSession | None = None
 
     # --- Propiedades ------------------------------------------------------
@@ -89,6 +90,11 @@ class MusicEngine:
     @property
     def song_player(self) -> SongPlayer:
         return self._song_player
+
+    @property
+    def best_streak(self) -> int:
+        """Mejor racha de la sesión (no se reinicia al reiniciar la canción)."""
+        return self._best_streak
 
     @property
     def streak(self) -> int:
@@ -174,6 +180,7 @@ class MusicEngine:
             song_result = self._song_player.play_note(note.key)
             if song_result in (SongResult.HIT, SongResult.FINISHED):
                 self._streak += 1
+                self._best_streak = max(self._best_streak, self._streak)
             elif song_result is SongResult.MISS:
                 self._streak = 0
         logger.debug(

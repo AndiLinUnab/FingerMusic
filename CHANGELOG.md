@@ -2,6 +2,21 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.1.4] - 2026-10-06
+
+### Added
+
+- Monitor de rendimiento: a los ~5 s de iniciar la cámara el programa registra el tiempo medio de cada etapa (cámara, modelo, motor, interfaz, teclado) y, si va por debajo de ~22 FPS, indica cuál es el cuello de botella y qué hacer.
+- `CameraSettings.fourcc` (por defecto `MJPG`): se pide ese formato a la cámara, que evita el modo lento (~15 FPS) de muchas cámaras en Windows; si la cámara no lo soporta se vuelve automáticamente al formato por defecto.
+
+## [0.1.3] - 2026-10-06
+
+### Added
+
+- Mejor racha de la sesión (`MEJOR xN`), que se conserva al fallar o reiniciar la canción y se resalta cuando la racha actual la iguala.
+- Efecto de confeti y cartel `RACHA xN!` cada 10 aciertos seguidos.
+- Pruebas de la mejor racha y de los efectos de la interfaz (`tests/test_ui.py`).
+
 ## [0.1.2] - 2026-10-06
 
 ### Added

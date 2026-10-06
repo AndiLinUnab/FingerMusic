@@ -199,3 +199,35 @@ def test_streak_does_not_change_in_free_mode(engine: MusicEngine) -> None:
     driver = Driver(engine)
     played = driver.tap(Finger.MIDDLE)
     assert played[0].streak == 0 and engine.streak == 0
+
+
+def test_best_streak_survives_misses_and_restarts(engine: MusicEngine) -> None:
+    engine.set_mode(Mode.SONG)
+    driver = Driver(engine)
+    assert engine.best_streak == 0
+    for _ in range(3):
+        driver.tap(Finger.MIDDLE)
+    assert engine.streak == 3 and engine.best_streak == 3
+    driver.tap(Finger.THUMB)  # fallo: la racha vuelve a 0 pero el récord se conserva
+    assert engine.streak == 0 and engine.best_streak == 3
+    engine.restart_song()
+    assert engine.streak == 0 and engine.best_streak == 3
+
+
+def test_best_streak_updates_only_when_beaten(engine: MusicEngine) -> None:
+    engine.set_mode(Mode.SONG)
+    driver = Driver(engine)
+    for _ in range(3):
+        driver.tap(Finger.MIDDLE)
+    driver.tap(Finger.THUMB)  # fallo
+    driver.tap(Finger.MIDDLE)
+    driver.tap(Finger.MIDDLE)
+    assert engine.streak == 2 and engine.best_streak == 3
+    driver.tap(Finger.MIDDLE)
+    driver.tap(Finger.MIDDLE)
+    assert engine.streak == 4 and engine.best_streak == 4
+
+
+def test_best_streak_is_not_counted_in_free_mode(engine: MusicEngine) -> None:
+    Driver(engine).tap(Finger.MIDDLE)
+    assert engine.best_streak == 0

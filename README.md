@@ -29,7 +29,7 @@ preentrenado (sin entrenar ninguna red desde cero).
 - **Transición de estado** EXTENDIDO → FLEXIONADO: una nota por pulsación, sin repeticiones.
 - Suavizado, histéresis, confirmación por frames y cooldown configurables.
 - **Calibración** de la posición de reposo de cada usuario.
-- **Modo libre** y **modo canción** (Jingle Bells) con nota actual, siguiente, progreso, acierto/error y **racha** de aciertos seguidos.
+- **Modo libre** y **modo canción** (Jingle Bells) con nota actual, siguiente, progreso, acierto/error, **racha** de aciertos seguidos y **mejor racha** de la sesión.
 - Audio sin Internet y **sin material con copyright**: los tonos se generan por síntesis.
 - Interfaz juguetona: cada nota tiene su color, las tarjetas rebotan al tocar, salen notas y chispas del dedo y hay confeti al completar la canción.
 - Manejo de errores (cámara, modelo, audio) con mensajes claros, logging y pruebas automáticas.
@@ -100,7 +100,7 @@ Todos los parámetros están en `src/fingermusic/config/settings.py`; no se nece
 
 | Parámetro | Clase | Para qué sirve |
 |---|---|---|
-| `index`, `width`, `height`, `fps`, `mirror` | `CameraSettings` | Cámara y resolución |
+| `index`, `width`, `height`, `fps`, `mirror`, `fourcc` | `CameraSettings` | Cámara, resolución y formato de video |
 | `flex_on_threshold` / `flex_off_threshold` | `DetectionSettings` | Umbrales de histéresis (sensibilidad) |
 | `state_confirmation_frames` | `DetectionSettings` | Frames para confirmar un cambio |
 | `note_cooldown` | `DetectionSettings` | Segundos mínimos entre dos notas del mismo dedo |
@@ -166,7 +166,7 @@ lateral y en la tarjeta del dedo correspondiente.
 
 Pulsa `2`. El panel muestra **NOTA ACTUAL**, **SIGUIENTE**, `Nota n / total` y una barra de
 progreso. Si tocas la nota correcta aparece **GENIAL!** (borde verde), se avanza y la **racha** (`RACHA xN`) sube; si tocas otra,
-aparece **UPS! OTRA** (borde rojo), no se avanza y la racha vuelve a 0. `R` reinicia. Detalle en [docs/jingle_bells.md](docs/jingle_bells.md).
+aparece **UPS! OTRA** (borde rojo), no se avanza y la racha vuelve a 0 (la mejor racha de la sesión se conserva). Cada 10 aciertos seguidos aparece confeti. `R` reinicia. Detalle en [docs/jingle_bells.md](docs/jingle_bells.md).
 
 ## Estructura del proyecto
 
@@ -184,7 +184,7 @@ FingerMusic/
 │   ├── ui/                 # interfaz OpenCV
 │   ├── config/             # parámetros centralizados
 │   └── utils/              # funciones matemáticas y logging
-├── tests/                  # pytest (89 pruebas)
+├── tests/                  # pytest (109 pruebas)
 ├── assets/sounds/          # 10 notas .wav generadas por el propio programa
 ├── docs/                   # documentación técnica
 └── screenshots/            # capturas para la demostración
@@ -242,6 +242,7 @@ Resumen (completo en [docs/troubleshooting.md](docs/troubleshooting.md)):
 
 - **No abre la cámara:** cierra Zoom/Teams/Cámara de Windows; revisa *Configuración → Privacidad → Cámara*; prueba `--camera 1`.
 - **No suena nada:** revisa el volumen de Windows y la tecla `S`; la barra inferior indica "Sin audio" si no hay dispositivo.
+- **FPS bajos (~15):** al iniciar, el programa registra en consola qué etapa es la lenta (`Rendimiento: ...`) y da un consejo; lo más común es la cámara con poca luz.
 - **Notas que se disparan solas o no se disparan:** calibra con `C` y ajusta `flex_on_threshold` / `flex_off_threshold`.
 - **`ModuleNotFoundError`:** el entorno no está activado o falta `pip install -r requirements.txt`.
 
@@ -271,7 +272,7 @@ pytest
 ruff check .
 ```
 
-Hay 89 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
+Hay 109 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
 confirmación), calibración, conversión de landmarks, mapeo dedo → nota, secuencia y avance de
 Jingle Bells, reinicio, configuración, síntesis y gestor de audio (con el driver `dummy`).
 Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámara real**.
@@ -280,7 +281,7 @@ Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámar
 
 Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvfb, sin cámara ni audio físicos):
 
-- ✅ Entorno virtual, instalación de `requirements.txt` y 89 pruebas aprobadas; `ruff` sin errores.
+- ✅ Entorno virtual, instalación de `requirements.txt` y 109 pruebas aprobadas; `ruff` sin errores.
 - ✅ El modelo MediaPipe Hands carga y procesa frames.
 - ✅ La aplicación inicia, abre la ventana, cambia de modo, calibra, activa/detiene la cámara y se cierra con código 0 (con una cámara simulada solo para esta verificación).
 - ✅ Sin cámara, muestra un mensaje claro y no se cierra.
