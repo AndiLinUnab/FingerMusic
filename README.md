@@ -29,7 +29,7 @@ preentrenado (sin entrenar ninguna red desde cero).
 - **Transición de estado** EXTENDIDO → FLEXIONADO: una nota por pulsación, sin repeticiones.
 - Suavizado, histéresis, confirmación por frames y cooldown configurables.
 - **Calibración** de la posición de reposo de cada usuario.
-- **Modo libre** y **modo canción** (Jingle Bells) con nota actual, siguiente, progreso y acierto/error.
+- **Modo libre** y **modo canción** (Jingle Bells) con nota actual, siguiente, progreso, acierto/error y **racha** de aciertos seguidos.
 - Audio sin Internet y **sin material con copyright**: los tonos se generan por síntesis.
 - Interfaz juguetona: cada nota tiene su color, las tarjetas rebotan al tocar, salen notas y chispas del dedo y hay confeti al completar la canción.
 - Manejo de errores (cámara, modelo, audio) con mensajes claros, logging y pruebas automáticas.
@@ -165,8 +165,8 @@ lateral y en la tarjeta del dedo correspondiente.
 ## Modo Jingle Bells
 
 Pulsa `2`. El panel muestra **NOTA ACTUAL**, **SIGUIENTE**, `Nota n / total` y una barra de
-progreso. Si tocas la nota correcta aparece **ACIERTO!** (borde verde) y se avanza; si tocas otra,
-**ERROR** (borde rojo) y no se avanza. `R` reinicia. Detalle en [docs/jingle_bells.md](docs/jingle_bells.md).
+progreso. Si tocas la nota correcta aparece **GENIAL!** (borde verde), se avanza y la **racha** (`RACHA xN`) sube; si tocas otra,
+aparece **UPS! OTRA** (borde rojo), no se avanza y la racha vuelve a 0. `R` reinicia. Detalle en [docs/jingle_bells.md](docs/jingle_bells.md).
 
 ## Estructura del proyecto
 
@@ -184,7 +184,7 @@ FingerMusic/
 │   ├── ui/                 # interfaz OpenCV
 │   ├── config/             # parámetros centralizados
 │   └── utils/              # funciones matemáticas y logging
-├── tests/                  # pytest (86 pruebas)
+├── tests/                  # pytest (89 pruebas)
 ├── assets/sounds/          # 10 notas .wav generadas por el propio programa
 ├── docs/                   # documentación técnica
 └── screenshots/            # capturas para la demostración
@@ -271,7 +271,7 @@ pytest
 ruff check .
 ```
 
-Hay 86 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
+Hay 89 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
 confirmación), calibración, conversión de landmarks, mapeo dedo → nota, secuencia y avance de
 Jingle Bells, reinicio, configuración, síntesis y gestor de audio (con el driver `dummy`).
 Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámara real**.
@@ -280,7 +280,7 @@ Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámar
 
 Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvfb, sin cámara ni audio físicos):
 
-- ✅ Entorno virtual, instalación de `requirements.txt` y 86 pruebas aprobadas; `ruff` sin errores.
+- ✅ Entorno virtual, instalación de `requirements.txt` y 89 pruebas aprobadas; `ruff` sin errores.
 - ✅ El modelo MediaPipe Hands carga y procesa frames.
 - ✅ La aplicación inicia, abre la ventana, cambia de modo, calibra, activa/detiene la cámara y se cierra con código 0 (con una cámara simulada solo para esta verificación).
 - ✅ Sin cámara, muestra un mensaje claro y no se cierra.

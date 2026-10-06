@@ -164,3 +164,38 @@ def test_calibration_without_hand_fails_gracefully(engine: MusicEngine) -> None:
         driver.now += DT
     assert any(m and "fallida" in m for m in messages)
     assert not engine.calibrating
+
+
+def test_streak_counts_consecutive_hits_and_resets_on_miss(engine: MusicEngine) -> None:
+    engine.set_mode(Mode.SONG)
+    driver = Driver(engine)
+    assert engine.streak == 0
+    for expected in (1, 2, 3):
+        played = driver.tap(Finger.MIDDLE)  # MI, MI, MI: las tres primeras notas
+        assert played[0].streak == expected
+    assert engine.streak == 3
+    played = driver.tap(Finger.THUMB)  # SOL, pero se espera MI
+    assert played[0].song_result is SongResult.MISS and played[0].streak == 0
+    assert engine.streak == 0
+    driver.tap(Finger.MIDDLE)
+    assert engine.streak == 1
+
+
+def test_streak_resets_on_restart_and_when_entering_song_mode(engine: MusicEngine) -> None:
+    engine.set_mode(Mode.SONG)
+    driver = Driver(engine)
+    driver.tap(Finger.MIDDLE)
+    driver.tap(Finger.MIDDLE)
+    assert engine.streak == 2
+    engine.restart_song()
+    assert engine.streak == 0
+    driver.tap(Finger.MIDDLE)
+    engine.set_mode(Mode.FREE)
+    engine.set_mode(Mode.SONG)
+    assert engine.streak == 0
+
+
+def test_streak_does_not_change_in_free_mode(engine: MusicEngine) -> None:
+    driver = Driver(engine)
+    played = driver.tap(Finger.MIDDLE)
+    assert played[0].streak == 0 and engine.streak == 0

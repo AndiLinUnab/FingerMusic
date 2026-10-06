@@ -40,6 +40,8 @@ class PlayedNote:
     side: HandSide
     finger: Finger
     song_result: SongResult | None = None
+    #: Aciertos seguidos tras esta nota (solo tiene sentido en modo canción).
+    streak: int = 0
 
 
 @dataclass(frozen=True)
@@ -76,6 +78,7 @@ class MusicEngine:
         self._finger_map: FingerMap = build_finger_map(swap_hands)
         self._mode = Mode.FREE
         self._song_player = SongPlayer(song)
+        self._streak = 0
         self._calibration: CalibrationSession | None = None
 
     # --- Propiedades ------------------------------------------------------
@@ -86,6 +89,11 @@ class MusicEngine:
     @property
     def song_player(self) -> SongPlayer:
         return self._song_player
+
+    @property
+    def streak(self) -> int:
+        """Aciertos seguidos en el modo canción (se reinicia al fallar)."""
+        return self._streak
 
     @property
     def swap_hands(self) -> bool:
@@ -104,12 +112,14 @@ class MusicEngine:
         """Cambia de modo. Al entrar en modo canción se reinicia la canción."""
         if mode is Mode.SONG and self._mode is not Mode.SONG:
             self._song_player.restart()
+            self._streak = 0
         self._mode = mode
         logger.info("Modo: %s", mode.value)
 
     def restart_song(self) -> None:
-        """Reinicia la canción desde la primera nota."""
+        """Reinicia la canción desde la primera nota y la racha."""
         self._song_player.restart()
+        self._streak = 0
 
     def toggle_swap_hands(self) -> bool:
         """Intercambia las notas de las manos. Devuelve el nuevo estado."""
@@ -162,10 +172,14 @@ class MusicEngine:
         song_result = None
         if self._mode is Mode.SONG:
             song_result = self._song_player.play_note(note.key)
+            if song_result in (SongResult.HIT, SongResult.FINISHED):
+                self._streak += 1
+            elif song_result is SongResult.MISS:
+                self._streak = 0
         logger.debug(
             "Nota %s (%s, %s) resultado=%s", note.label, side.value, finger.name, song_result
         )
-        return PlayedNote(note, side, finger, song_result)
+        return PlayedNote(note, side, finger, song_result, self._streak)
 
     def _handle_missing_hands(self, present: set[HandSide]) -> None:
         for side in HandSide:

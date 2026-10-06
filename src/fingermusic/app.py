@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 _FPS_SMOOTHING = 0.1
 _MAX_DETECTION_ERRORS = 30
+_STREAK_MILESTONE = 10  # cada cuántos aciertos seguidos se muestra un mensaje
 
 
 class Application:
@@ -125,6 +126,11 @@ class Application:
             if played.song_result is not None and played.song_result is not SongResult.IGNORED:
                 self._feedback = played.song_result
                 self._feedback_time = now
+                if (
+                    played.song_result in (SongResult.HIT, SongResult.FINISHED)
+                    and played.streak % _STREAK_MILESTONE == 0
+                ):
+                    self._set_message(f"Racha de {played.streak} aciertos seguidos!")
         if result.message:
             self._set_message(result.message, error="fallida" in result.message)
         return result
@@ -225,6 +231,7 @@ class Application:
             song_total=player.total,
             song_progress=player.progress,
             song_finished=player.finished,
+            streak=self._engine.streak,
             current_label=label(current),
             next_label=label(upcoming),
             feedback=self._feedback,

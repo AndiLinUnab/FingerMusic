@@ -26,6 +26,8 @@ es decir, las cinco notas de una mano. No incluye ritmo ni duraciones: el usuari
 | `FINISHED` | Era la última | Muestra "COMPLETADA!" |
 | `IGNORED` | La canción ya terminó | Nada |
 
+La **racha** (`MusicEngine.streak`) suma 1 con cada `HIT`/`FINISHED` y vuelve a 0 con un `MISS`, al reiniciar o al entrar al modo canción; cada 10 aciertos seguidos se muestra un mensaje. Cambia de color a partir de 5 y de 10.
+
 La nota **suena siempre**, acierte o no. Entrar al modo canción o pulsar `R` reinicia la melodía.
 
 ## Dedos necesarios

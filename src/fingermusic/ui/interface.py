@@ -140,6 +140,7 @@ class ViewState:
     song_total: int = 0
     song_progress: float = 0.0
     song_finished: bool = False
+    streak: int = 0
     current_label: str | None = None
     next_label: str | None = None
     feedback: SongResult | None = None
@@ -590,9 +591,24 @@ class Interface:
             )
         count = min(state.song_index + (0 if state.song_finished else 1), state.song_total)
         put_text(canvas, f"Nota {count} / {state.song_total}", (x0 + 16, y0 + 180), 0.5, TEXT)
+        self._draw_streak(canvas, state, x0 + 170, y0 + 180)
         self._draw_rainbow_bar(canvas, (x0 + 16, y0 + 190, SIDEBAR_W - 32, 14), state.song_progress)
         put_text(canvas, f"{round(state.song_progress * 100)}%", (x0 + 16, y0 + 232), 0.5, TEXT)
         self._draw_feedback_box(canvas, state, x0, y0)
+
+    def _draw_streak(self, canvas: np.ndarray, state: ViewState, x: int, y: int) -> None:
+        """Contador de aciertos seguidos; crece un poco con cada acierto."""
+        if state.streak >= 10:
+            color = _RAINBOW[7]
+        elif state.streak >= 5:
+            color = _RAINBOW[1]
+        elif state.streak >= 1:
+            color = YELLOW
+        else:
+            color = TEXT_DIM
+        hit = state.feedback in (SongResult.HIT, SongResult.FINISHED)
+        pop = max(0.0, 1.0 - state.feedback_age / _BOUNCE_SECONDS) if hit else 0.0
+        put_text(canvas, f"RACHA x{state.streak}", (x, y), 0.5 + 0.15 * pop, color, 2)
 
     def _draw_feedback_box(self, canvas: np.ndarray, state: ViewState, x0: int, y0: int) -> None:
         box = (x0 + 100, y0 + 210, SIDEBAR_W - 116, 32)

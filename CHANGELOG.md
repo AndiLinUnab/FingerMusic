@@ -2,6 +2,12 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.1.2] - 2026-10-06
+
+### Added
+
+- Racha de aciertos en el modo canción: cuenta las notas correctas seguidas, se reinicia al fallar, al reiniciar la canción o al entrar al modo canción, y avisa cada 10 aciertos.
+
 ## [0.1.1] - 2026-10-06
 
 ### Changed
