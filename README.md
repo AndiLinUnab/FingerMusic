@@ -107,6 +107,7 @@ Todos los parámetros están en `src/fingermusic/config/settings.py`; no se nece
 | `smoothing_alpha` | `DetectionSettings` | Suavizado (menor = más suave, más lento) |
 | `pip_angle_*`, `reach_ratio_*`, `thumb_*` | `DetectionSettings` | Rangos geométricos de flexión |
 | `volume`, `buffer_size` | `AudioSettings` | Volumen inicial y latencia |
+| `error_plays_note`, `error_duration` | `AudioSettings` | Sonido de error del modo canción (si suena también la nota fallada) y su duración |
 
 Las notas están en `audio/notes.py` y la canción en `music/jingle_bells.py`.
 Detalles en [docs/funcionamiento.md](docs/funcionamiento.md).
@@ -180,7 +181,7 @@ Cambiar de canción reinicia su progreso y la racha; la mejor racha de la sesió
 
 Pulsa `2` (empieza con la canción seleccionada). El panel muestra **NOTA ACTUAL**, **SIGUIENTE**, `Nota n / total` y una barra de
 progreso. Si tocas la nota correcta aparece **GENIAL!** (borde verde), se avanza y la **racha** (`RACHA xN`) sube; si tocas otra,
-aparece **UPS! OTRA** (borde rojo), no se avanza y la racha vuelve a 0 (la mejor racha de la sesión se conserva). Cada 10 aciertos seguidos aparece confeti. `R` reinicia. Detalle en [docs/jingle_bells.md](docs/jingle_bells.md).
+aparece **UPS! OTRA** (borde rojo), no se avanza y suena el sonido de error, la racha vuelve a 0 (la mejor racha de la sesión se conserva). Cada 10 aciertos seguidos aparece confeti. `R` reinicia. Detalle en [docs/jingle_bells.md](docs/jingle_bells.md).
 
 ## Estructura del proyecto
 
@@ -198,7 +199,7 @@ FingerMusic/
 │   ├── ui/                 # interfaz OpenCV
 │   ├── config/             # parámetros centralizados
 │   └── utils/              # funciones matemáticas y logging
-├── tests/                  # pytest (124 pruebas)
+├── tests/                  # pytest (134 pruebas)
 ├── assets/sounds/          # 10 notas .wav generadas por el propio programa
 ├── docs/                   # documentación técnica
 └── screenshots/            # capturas para la demostración
@@ -218,7 +219,7 @@ compara con **dos umbrales** (histéresis), se **confirma durante varios frames*
 Los 10 tonos se **sintetizan** (armónicos + envolvente) y se guardan como `.wav` en
 `assets/sounds/`, de modo que no hay material con derechos de autor ni dependencia de Internet.
 `pygame.mixer` los reproduce con un buffer de 256 muestras y 16 canales (notas simultáneas).
-Si faltan los `.wav`, se regeneran solos. Ver [docs/reproduccion_audio.md](docs/reproduccion_audio.md).
+En el modo canción, una nota equivocada suena como un *buzzer* grave descendente (`error.wav`) en lugar de la nota. Si faltan los `.wav`, se regeneran solos. Ver [docs/reproduccion_audio.md](docs/reproduccion_audio.md).
 
 ## Demostración
 
@@ -286,7 +287,7 @@ pytest
 ruff check .
 ```
 
-Hay 124 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
+Hay 134 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
 confirmación), calibración, conversión de landmarks, mapeo dedo → nota, secuencia y avance de
 Jingle Bells, reinicio, configuración, síntesis y gestor de audio (con el driver `dummy`).
 Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámara real**.
@@ -295,7 +296,7 @@ Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámar
 
 Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvfb, sin cámara ni audio físicos):
 
-- ✅ Entorno virtual, instalación de `requirements.txt` y 124 pruebas aprobadas; `ruff` sin errores.
+- ✅ Entorno virtual, instalación de `requirements.txt` y 134 pruebas aprobadas; `ruff` sin errores.
 - ✅ El modelo MediaPipe Hands carga y procesa frames.
 - ✅ La aplicación inicia, abre la ventana, cambia de modo, calibra, activa/detiene la cámara y se cierra con código 0 (con una cámara simulada solo para esta verificación).
 - ✅ Sin cámara, muestra un mensaje claro y no se cierra.

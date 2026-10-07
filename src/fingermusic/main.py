@@ -55,11 +55,12 @@ def main(argv: list[str] | None = None) -> int:
             settings.validate()
 
         if args.regenerate_sounds:
-            from fingermusic.audio.synth import generate_all_notes
+            from fingermusic.audio.synth import generate_all_sounds
 
-            generate_all_notes(
+            generate_all_sounds(
                 settings.audio.sounds_dir,
                 settings.audio.note_duration,
+                settings.audio.error_duration,
                 settings.audio.sample_rate,
                 overwrite=True,
             )

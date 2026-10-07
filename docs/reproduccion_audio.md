@@ -16,7 +16,23 @@ Se normaliza a un pico de 0.8 y se guarda como WAV mono de 16 bits a 44.1 kHz (0
 
 Los archivos `assets/sounds/*.wav` están incluidos en el repositorio y fueron generados por este
 mismo código; **no hay material con derechos de autor** (origen: síntesis propia, licencia MIT del proyecto).
-Se regeneran con `python run.py --regenerate-sounds` o automáticamente si faltan.
+Se regeneran (notas y sonido de error) con `python run.py --regenerate-sounds` o automáticamente si faltan.
+
+## Sonido de error (modo canción)
+
+Al tocar una nota equivocada en el modo canción suena `assets/sounds/error.wav`, un *buzzer* de 0.3 s que
+desciende de 220 Hz a 110 Hz (más grave que la nota más baja, DO4 = 261.63 Hz). Se genera con una onda tipo
+diente de sierra (6 armónicos, caída exponencial rápida), por lo que es áspero y se distingue al instante de
+las notas suaves. Se genera por síntesis propia, sin material con derechos de autor.
+
+| Parámetro (`AudioSettings`) | Efecto |
+|---|---|
+| `error_plays_note = False` (por defecto) | Un fallo suena solo como el buzzer |
+| `error_plays_note = True` | Suenan el buzzer y la nota tocada |
+| `error_duration` | Duración del buzzer en segundos (regenera con `--regenerate-sounds`) |
+
+El modo libre y los aciertos siguen sonando como la nota. `AudioManager.play_result(nota, fallo)` decide
+qué suena. El sonido respeta el volumen y el silencio (`S`).
 
 ## Reproducción
 

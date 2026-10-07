@@ -147,7 +147,7 @@ class Application:
         started = time.perf_counter()
         result = self._engine.process(hands, now)
         for played in result.played:
-            self._audio.play(played.note.key)
+            self._audio.play_result(played.note.key, played.song_result is SongResult.MISS)
             self._press_times[(played.side, played.finger)] = now
             self._last_note_label = played.note.label
             self._last_note_time = now

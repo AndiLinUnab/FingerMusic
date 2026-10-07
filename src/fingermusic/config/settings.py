@@ -102,6 +102,10 @@ class AudioSettings:
     volume_step: float = 0.1
     #: Duración (s) de cada tono generado.
     note_duration: float = 0.7
+    #: Duración (s) del sonido de error del modo canción.
+    error_duration: float = 0.3
+    #: Si es ``True``, al fallar suena también la nota tocada además del sonido de error.
+    error_plays_note: bool = False
     sounds_dir: Path = SOUNDS_DIR
 
 
@@ -153,6 +157,8 @@ class Settings:
             raise ValueError("thumb_ratio_flexed debe ser menor que thumb_ratio_extended")
         if det.thumb_angle_flexed >= det.thumb_angle_extended:
             raise ValueError("thumb_angle_flexed debe ser menor que thumb_angle_extended")
+        if self.audio.error_duration <= 0:
+            raise ValueError("error_duration debe ser positivo")
         if not 0.0 <= self.audio.volume <= 1.0:
             raise ValueError("volume debe estar en [0, 1]")
         if self.camera.width <= 0 or self.camera.height <= 0:

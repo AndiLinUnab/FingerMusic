@@ -2,6 +2,13 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.1.6] - 2026-10-07
+
+### Added
+
+- Sonido de error en el modo canción: al tocar una nota equivocada suena un "buzzer" grave que desciende de 220 a 110 Hz, distinto de cualquier nota. Por defecto reemplaza a la nota fallada; con `AudioSettings.error_plays_note = True` suenan los dos.
+- `assets/sounds/error.wav`, generado por síntesis (sin material con copyright); se regenera solo si falta o con `--regenerate-sounds`.
+
 ## [0.1.5] - 2026-10-07
 
 ### Added

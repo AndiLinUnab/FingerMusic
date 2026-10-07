@@ -7,6 +7,7 @@ import os
 import wave
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")  # sin dispositivo de audio real
@@ -14,7 +15,13 @@ os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 from fingermusic.audio.audio_manager import AudioManager  # noqa: E402
 from fingermusic.audio.notes import NOTES  # noqa: E402
-from fingermusic.audio.synth import generate_all_notes, synthesize_tone, write_wav  # noqa: E402
+from fingermusic.audio.synth import (  # noqa: E402
+    generate_all_notes,
+    generate_all_sounds,
+    synthesize_error_tone,
+    synthesize_tone,
+    write_wav,
+)
 from fingermusic.config import AudioSettings  # noqa: E402
 
 
@@ -59,3 +66,115 @@ def test_audio_manager_loads_and_plays(tmp_path: Path) -> None:
     finally:
         manager.close()
     assert not manager.available
+
+
+def dominant_frequency(samples: np.ndarray, sample_rate: int) -> float:
+    spectrum = np.abs(np.fft.rfft(samples.astype(float) * np.hanning(len(samples))))
+    return float(np.argmax(spectrum) * sample_rate / len(samples))
+
+
+def test_error_tone_shape_and_range() -> None:
+    samples = synthesize_error_tone(0.3, 44100)
+    assert samples.dtype.name == "int16" and len(samples) == 13230
+    assert 15000 < int(abs(samples).max()) <= 32767
+    with pytest.raises(ValueError):
+        synthesize_error_tone(0.0)
+
+
+def test_error_tone_is_low_and_descending() -> None:
+    rate = 44100
+    samples = synthesize_error_tone(0.3, rate)
+    start = dominant_frequency(samples[: rate // 20], rate)  # primeros 50 ms
+    end = dominant_frequency(samples[-rate // 10 : -rate // 40], rate)
+    assert start > end
+    assert start < 261.63  # más grave que la nota más baja (DO4)
+
+
+def test_error_tone_is_harsher_than_a_note() -> None:
+    """El buzzer tiene mucha más energía en armónicos altos que una nota suave."""
+
+    def high_energy_ratio(samples: np.ndarray) -> float:
+        spectrum = np.abs(np.fft.rfft(samples.astype(float))) ** 2
+        freqs = np.fft.rfftfreq(len(samples), 1 / 44100)
+        return float(spectrum[freqs > 600].sum() / spectrum.sum())
+
+    error = high_energy_ratio(synthesize_error_tone(0.3))
+    note = high_energy_ratio(synthesize_tone(261.63, 0.3))
+    assert error > note
+
+
+def test_generate_all_sounds_includes_the_error_file(tmp_path: Path) -> None:
+    paths = generate_all_sounds(tmp_path, note_duration=0.1, error_duration=0.1)
+    assert len(paths) == 11 and (tmp_path / "error.wav").exists()
+
+
+def test_the_repository_ships_the_error_sound() -> None:
+    from fingermusic.config.settings import SOUNDS_DIR
+
+    assert (SOUNDS_DIR / "error.wav").is_file()
+
+
+class Spy:
+    def __init__(self) -> None:
+        self.plays = 0
+
+    def play(self) -> None:
+        self.plays += 1
+
+    def set_volume(self, _volume: float) -> None:
+        pass
+
+
+def spied_manager(tmp_path: Path, **overrides: object) -> tuple[AudioManager, Spy, Spy]:
+    manager = AudioManager(dataclasses.replace(AudioSettings(), sounds_dir=tmp_path, **overrides))
+    assert manager.available, manager.error
+    note, error = Spy(), Spy()
+    manager._sounds["mi4"] = note
+    manager._sounds["error"] = error
+    return manager, note, error
+
+
+def test_error_sound_is_loaded_and_playable(tmp_path: Path) -> None:
+    manager = AudioManager(dataclasses.replace(AudioSettings(), sounds_dir=tmp_path))
+    try:
+        assert (tmp_path / "error.wav").exists()  # se generó al faltar
+        assert manager.play_error() is True
+    finally:
+        manager.close()
+
+
+def test_a_hit_plays_the_note(tmp_path: Path) -> None:
+    manager, note, error = spied_manager(tmp_path)
+    try:
+        assert manager.play_result("mi4", missed=False) is True
+        assert (note.plays, error.plays) == (1, 0)
+    finally:
+        manager.close()
+
+
+def test_a_miss_plays_only_the_error_by_default(tmp_path: Path) -> None:
+    manager, note, error = spied_manager(tmp_path)
+    try:
+        assert manager.play_result("mi4", missed=True) is True
+        assert (note.plays, error.plays) == (0, 1)
+    finally:
+        manager.close()
+
+
+def test_a_miss_can_also_play_the_note(tmp_path: Path) -> None:
+    manager, note, error = spied_manager(tmp_path, error_plays_note=True)
+    try:
+        manager.play_result("mi4", missed=True)
+        assert (note.plays, error.plays) == (1, 1)
+    finally:
+        manager.close()
+
+
+def test_muted_manager_plays_no_error(tmp_path: Path) -> None:
+    manager, note, error = spied_manager(tmp_path)
+    try:
+        manager.toggle_enabled()
+        assert manager.play_result("mi4", missed=True) is False
+        assert (note.plays, error.plays) == (0, 0)
+    finally:
+        manager.close()
