@@ -134,6 +134,7 @@ Opciones: `--camera N` (otra cámara), `--swap-hands`, `--debug`, `--regenerate-
 | MODO LIBRE | `1` | Toca cualquier nota |
 | MODO CANCION | `2` | Jingle Bells guiado |
 | REINICIAR | `R` | Reinicia la canción |
+| `<` `>` (en el panel) | `P` / `N` | Canción anterior / siguiente |
 | CALIBRAR | `C` | Calibra la mano abierta (2 s) |
 | CAMARA ON/OFF | `Espacio` | Inicia o detiene la cámara |
 | PUNTOS SI/NO | `L` | Muestra/oculta landmarks |
@@ -162,9 +163,22 @@ con la derecha). Para las 10 notas se usan las dos manos. Jingle Bells solo nece
 Cualquier nota se puede tocar en cualquier momento. La nota que suena se resalta en el panel
 lateral y en la tarjeta del dedo correspondiente.
 
+## Canciones
+
+En el modo canción cambia de canción con las flechas `<` `>` del panel o con `P` / `N`. Todas son melodías de dominio público, simplificadas y sin ritmo:
+
+| # | Canción | Manos | Notas |
+|---|---|---|---|
+| 1 | Jingle Bells | 1 | 51 |
+| 2 | Estrellita | 2 (usa LA) | 42 |
+| 3 | Himno a la Alegría (Beethoven) | 1 | 62 |
+| 4 | Mary y su corderito | 1 | 26 |
+
+Cambiar de canción reinicia su progreso y la racha; la mejor racha de la sesión se conserva. Para añadir otra, ver [docs/jingle_bells.md](docs/jingle_bells.md).
+
 ## Modo Jingle Bells
 
-Pulsa `2`. El panel muestra **NOTA ACTUAL**, **SIGUIENTE**, `Nota n / total` y una barra de
+Pulsa `2` (empieza con la canción seleccionada). El panel muestra **NOTA ACTUAL**, **SIGUIENTE**, `Nota n / total` y una barra de
 progreso. Si tocas la nota correcta aparece **GENIAL!** (borde verde), se avanza y la **racha** (`RACHA xN`) sube; si tocas otra,
 aparece **UPS! OTRA** (borde rojo), no se avanza y la racha vuelve a 0 (la mejor racha de la sesión se conserva). Cada 10 aciertos seguidos aparece confeti. `R` reinicia. Detalle en [docs/jingle_bells.md](docs/jingle_bells.md).
 
@@ -180,11 +194,11 @@ FingerMusic/
 │   ├── camera/             # captura de video
 │   ├── vision/             # landmarks, MediaPipe, detección de dedos
 │   ├── audio/              # notas, síntesis de tonos, reproducción
-│   ├── music/              # Jingle Bells y seguimiento de la canción
+│   ├── music/              # modelo de canción, catálogo y seguimiento
 │   ├── ui/                 # interfaz OpenCV
 │   ├── config/             # parámetros centralizados
 │   └── utils/              # funciones matemáticas y logging
-├── tests/                  # pytest (109 pruebas)
+├── tests/                  # pytest (124 pruebas)
 ├── assets/sounds/          # 10 notas .wav generadas por el propio programa
 ├── docs/                   # documentación técnica
 └── screenshots/            # capturas para la demostración
@@ -272,7 +286,7 @@ pytest
 ruff check .
 ```
 
-Hay 109 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
+Hay 124 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
 confirmación), calibración, conversión de landmarks, mapeo dedo → nota, secuencia y avance de
 Jingle Bells, reinicio, configuración, síntesis y gestor de audio (con el driver `dummy`).
 Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámara real**.
@@ -281,7 +295,7 @@ Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámar
 
 Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvfb, sin cámara ni audio físicos):
 
-- ✅ Entorno virtual, instalación de `requirements.txt` y 109 pruebas aprobadas; `ruff` sin errores.
+- ✅ Entorno virtual, instalación de `requirements.txt` y 124 pruebas aprobadas; `ruff` sin errores.
 - ✅ El modelo MediaPipe Hands carga y procesa frames.
 - ✅ La aplicación inicia, abre la ventana, cambia de modo, calibra, activa/detiene la cámara y se cierra con código 0 (con una cámara simulada solo para esta verificación).
 - ✅ Sin cámara, muestra un mensaje claro y no se cierra.

@@ -12,7 +12,7 @@ from fingermusic.audio.notes import NOTES_BY_KEY
 from fingermusic.camera.camera_manager import CameraError, CameraManager
 from fingermusic.config import Settings
 from fingermusic.engine import FrameResult, Mode, MusicEngine
-from fingermusic.music.jingle_bells import build_jingle_bells
+from fingermusic.music.catalog import build_songs
 from fingermusic.music.song_player import SongResult
 from fingermusic.ui.interface import Action, Interface, ViewState
 from fingermusic.utils.helpers import exponential_smoothing
@@ -38,7 +38,7 @@ class Application:
         self._detector = HandDetector(settings.detection)  # puede lanzar HandDetectorError
         self._camera = CameraManager(settings.camera)
         self._audio = AudioManager(settings.audio)
-        self._engine = MusicEngine(settings.detection, build_jingle_bells(), swap_hands)
+        self._engine = MusicEngine(settings.detection, build_songs(), swap_hands)
         self._ui = Interface(settings.ui)
 
         self._running = False
@@ -175,6 +175,8 @@ class Application:
         elif action is Action.MODE_SONG:
             self._engine.set_mode(Mode.SONG)
             self._feedback = None
+        elif action in (Action.NEXT_SONG, Action.PREVIOUS_SONG):
+            self._change_song(action is Action.NEXT_SONG)
         elif action is Action.RESTART_SONG:
             self._engine.restart_song()
             self._feedback = None
@@ -196,6 +198,14 @@ class Application:
             step = self._settings.audio.volume_step
             delta = step if action is Action.VOLUME_UP else -step
             self._audio.set_volume(self._audio.volume + delta)
+
+    def _change_song(self, forward: bool) -> None:
+        """Cambia de canción y entra al modo canción si no estaba en él."""
+        song = self._engine.next_song() if forward else self._engine.previous_song()
+        self._engine.set_mode(Mode.SONG)
+        self._feedback = None
+        hands = "necesita las dos manos" if song.both_hands else "se toca con una mano"
+        self._set_message(f"{song.title}: {hands}.")
 
     def _start_camera(self) -> None:
         try:
@@ -256,6 +266,9 @@ class Application:
             last_note_label=self._last_note_label,
             last_note_age=now - self._last_note_time,
             song_title=player.title,
+            song_number=self._engine.song_index + 1,
+            song_count=len(self._engine.songs),
+            song_both_hands=self._engine.songs[self._engine.song_index].both_hands,
             song_index=player.index,
             song_total=player.total,
             song_progress=player.progress,

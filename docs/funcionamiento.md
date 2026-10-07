@@ -41,7 +41,7 @@ Todo en `src/fingermusic/config/settings.py` salvo notas y canción.
 | Volumen | `AudioSettings.volume`, `volume_step` |
 | Latencia de audio | `AudioSettings.buffer_size` (256; sube a 512 si hay chasquidos) |
 | Notas y mapeo por dedo | `audio/notes.py` (`NOTES`, `DEFAULT_HAND_NOTES`) |
-| Canción | `music/jingle_bells.py` (`_PHRASES`) |
+| Canciones | `music/catalog.py` (`build_songs()` y una función por canción) |
 
 `Settings.validate()` comprueba la coherencia de los valores al arrancar.
 

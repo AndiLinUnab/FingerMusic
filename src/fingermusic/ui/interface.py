@@ -91,6 +91,8 @@ class Action(StrEnum):
     MODE_FREE = "mode_free"
     MODE_SONG = "mode_song"
     RESTART_SONG = "restart_song"
+    NEXT_SONG = "next_song"
+    PREVIOUS_SONG = "previous_song"
     CALIBRATE = "calibrate"
     TOGGLE_LANDMARKS = "toggle_landmarks"
     TOGGLE_SOUND = "toggle_sound"
@@ -107,6 +109,8 @@ _KEY_BINDINGS: dict[int, Action] = {
     ord("1"): Action.MODE_FREE,
     ord("2"): Action.MODE_SONG,
     ord("r"): Action.RESTART_SONG,
+    ord("n"): Action.NEXT_SONG,
+    ord("p"): Action.PREVIOUS_SONG,
     ord("c"): Action.CALIBRATE,
     ord("l"): Action.TOGGLE_LANDMARKS,
     ord("s"): Action.TOGGLE_SOUND,
@@ -137,6 +141,9 @@ class ViewState:
     last_note_age: float = 999.0
     # Modo canción
     song_title: str = ""
+    song_number: int = 1
+    song_count: int = 1
+    song_both_hands: bool = False
     song_index: int = 0
     song_total: int = 0
     song_progress: float = 0.0
@@ -563,6 +570,7 @@ class Interface:
     def _draw_sidebar(self, canvas: np.ndarray, state: ViewState) -> None:
         x0, y0 = VIDEO_W, HEADER_H
         cv2.rectangle(canvas, (x0, y0), (CANVAS_W, y0 + VIDEO_H), PANEL, -1)
+        self._buttons = []
         title_color = ACCENT if state.mode is Mode.FREE else _RAINBOW[5]
         put_text(canvas, state.mode.value, (x0 + 16, y0 + 30), 0.75, title_color, 2)
         if state.mode is Mode.SONG:
@@ -611,24 +619,44 @@ class Interface:
         put_text(canvas, "Mano der: LA -> MI'", (x0 + 160, y0 + 215), 0.45, TEXT_DIM)
         put_text(canvas, "(de pulgar a menique)", (x0 + 160, y0 + 232), 0.4, TEXT_DIM)
 
+    def _draw_song_selector(self, canvas: np.ndarray, state: ViewState, x0: int, y0: int) -> None:
+        """Flechas para cambiar de canción, título, número de manos, posición y récord."""
+        arrow_w, arrow_h, top = 30, 26, y0 + 38
+        left = (x0 + 12, top, arrow_w, arrow_h)
+        right = (x0 + SIDEBAR_W - 12 - arrow_w, top, arrow_w, arrow_h)
+        for rect, label, action in (
+            (left, "<", Action.PREVIOUS_SONG),
+            (right, ">", Action.NEXT_SONG),
+        ):
+            rounded_rect(canvas, rect, 10, _RAINBOW[5])
+            put_text(canvas, label, (rect[0], rect[1] + 19), 0.65, DARK, 2, center_width=rect[2])
+            self._buttons.append(_Button(action, rect))
+        title_x = x0 + 12 + arrow_w + 4
+        title_w = SIDEBAR_W - 2 * (12 + arrow_w + 4)
+        put_text(canvas, state.song_title, (title_x, top + 19), 0.52, TEXT, 1, center_width=title_w)
+        hands = "2 MANOS" if state.song_both_hands else "1 MANO"
+        hands_color = _RAINBOW[0] if state.song_both_hands else GREEN
+        info = f"{state.song_number}/{state.song_count}  {hands}"
+        put_text(canvas, info, (x0 + 16, y0 + 80), 0.42, hands_color)
+        self._draw_best_streak(canvas, state, x0 + 185, y0 + 80)
+
     def _draw_song_panel(self, canvas: np.ndarray, state: ViewState, x0: int, y0: int) -> None:
-        put_text(canvas, state.song_title, (x0 + 16, y0 + 55), 0.55, TEXT)
-        self._draw_best_streak(canvas, state, x0 + 175, y0 + 55)
+        self._draw_song_selector(canvas, state, x0, y0)
         if state.song_finished:
-            put_text(canvas, "COMPLETADA!", (x0 + 16, y0 + 118), 1.1, GREEN, 3)
-            put_text(canvas, "Pulsa REINICIAR (R)", (x0 + 16, y0 + 150), 0.5, TEXT_DIM)
+            put_text(canvas, "COMPLETADA!", (x0 + 16, y0 + 128), 1.1, GREEN, 3)
+            put_text(canvas, "Pulsa REINICIAR (R)", (x0 + 16, y0 + 158), 0.5, TEXT_DIM)
         else:
-            put_text(canvas, "TOCA", (x0 + 16, y0 + 82), 0.5, TEXT_DIM)
-            self._draw_note_bubble(canvas, (x0 + 70, y0 + 120), 36, state.current_label, 1.0)
-            put_text(canvas, "LUEGO", (x0 + 168, y0 + 82), 0.5, TEXT_DIM)
+            put_text(canvas, "TOCA", (x0 + 16, y0 + 100), 0.5, TEXT_DIM)
+            self._draw_note_bubble(canvas, (x0 + 80, y0 + 136), 32, state.current_label, 0.9)
+            put_text(canvas, "LUEGO", (x0 + 168, y0 + 100), 0.5, TEXT_DIM)
             self._draw_note_bubble(
-                canvas, (x0 + 212, y0 + 116), 24, state.next_label or "FIN", 0.6, active=False
+                canvas, (x0 + 214, y0 + 132), 22, state.next_label or "FIN", 0.55, active=False
             )
         count = min(state.song_index + (0 if state.song_finished else 1), state.song_total)
-        put_text(canvas, f"Nota {count} / {state.song_total}", (x0 + 16, y0 + 180), 0.5, TEXT)
-        self._draw_streak(canvas, state, x0 + 170, y0 + 180)
-        self._draw_rainbow_bar(canvas, (x0 + 16, y0 + 190, SIDEBAR_W - 32, 14), state.song_progress)
-        put_text(canvas, f"{round(state.song_progress * 100)}%", (x0 + 16, y0 + 232), 0.5, TEXT)
+        put_text(canvas, f"Nota {count} / {state.song_total}", (x0 + 16, y0 + 188), 0.5, TEXT)
+        self._draw_streak(canvas, state, x0 + 170, y0 + 188)
+        self._draw_rainbow_bar(canvas, (x0 + 16, y0 + 196, SIDEBAR_W - 32, 12), state.song_progress)
+        put_text(canvas, f"{round(state.song_progress * 100)}%", (x0 + 16, y0 + 236), 0.5, TEXT)
         self._draw_feedback_box(canvas, state, x0, y0)
 
     def _draw_streak(self, canvas: np.ndarray, state: ViewState, x: int, y: int) -> None:
@@ -652,7 +680,7 @@ class Interface:
         put_text(canvas, f"MEJOR x{state.best_streak}", (x, y), 0.5, color, 2 if is_record else 1)
 
     def _draw_feedback_box(self, canvas: np.ndarray, state: ViewState, x0: int, y0: int) -> None:
-        box = (x0 + 100, y0 + 210, SIDEBAR_W - 116, 32)
+        box = (x0 + 100, y0 + 214, SIDEBAR_W - 116, 32)
         active = (
             state.feedback is not None and state.feedback_age <= self._settings.feedback_seconds
         )
@@ -701,7 +729,6 @@ class Interface:
             (Action.VOLUME_UP, "VOL + [+]", False, _RAINBOW[8]),
             (Action.QUIT, "SALIR [Q]", False, (90, 90, 190)),
         ]
-        self._buttons = []
         width, height, gap = (SIDEBAR_W - 36) // 2, 32, 6
         for i, (action, label, active, color) in enumerate(specs):
             col, row = i % 2, i // 2

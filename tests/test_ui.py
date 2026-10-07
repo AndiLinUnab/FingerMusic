@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import cv2
 import numpy as np
 import pytest
 
 from fingermusic.config import UiSettings
 from fingermusic.engine import Mode
-from fingermusic.ui.interface import CANVAS_H, CANVAS_W, Interface, ViewState
+from fingermusic.ui.interface import CANVAS_H, CANVAS_W, Action, Interface, ViewState
 
 
 @pytest.fixture
@@ -80,3 +81,34 @@ def test_confetti_when_the_song_is_completed(ui: Interface) -> None:
     ui.render(None, song_state(4))
     ui.render(None, song_state(5, finished=True))
     assert len(ui._particles) >= 90
+
+
+def test_song_mode_shows_clickable_song_arrows(ui: Interface) -> None:
+    ui.render(None, song_state(0))
+    actions = {button.action for button in ui._buttons}
+    assert {Action.NEXT_SONG, Action.PREVIOUS_SONG} <= actions
+
+
+def test_clicking_the_arrows_queues_the_actions(ui: Interface) -> None:
+    ui.render(None, song_state(0))
+    for target in (Action.NEXT_SONG, Action.PREVIOUS_SONG):
+        x, y, w, h = next(b.rect for b in ui._buttons if b.action is target)
+        ui._on_mouse(cv2.EVENT_LBUTTONDOWN, x + w // 2, y + h // 2, 0, None)
+    assert ui._pending == [Action.NEXT_SONG, Action.PREVIOUS_SONG]
+
+
+def test_free_mode_has_no_song_arrows_and_buttons_do_not_accumulate(ui: Interface) -> None:
+    free = song_state(0)
+    free.mode = Mode.FREE
+    ui.render(None, free)
+    assert Action.NEXT_SONG not in {b.action for b in ui._buttons}
+    count = len(ui._buttons)
+    ui.render(None, free)
+    assert len(ui._buttons) == count
+
+
+def test_keyboard_shortcuts_for_songs() -> None:
+    from fingermusic.ui.interface import _KEY_BINDINGS
+
+    assert _KEY_BINDINGS[ord("n")] is Action.NEXT_SONG
+    assert _KEY_BINDINGS[ord("p")] is Action.PREVIOUS_SONG

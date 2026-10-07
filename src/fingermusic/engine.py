@@ -7,12 +7,13 @@ dedos se flexionaron y qué notas deben sonar. Esto lo hace fácil de probar.
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 
 from fingermusic.audio.notes import FingerMap, Note, build_finger_map
 from fingermusic.config import DetectionSettings
-from fingermusic.music.jingle_bells import Song
+from fingermusic.music.song import Song
 from fingermusic.music.song_player import SongPlayer, SongResult
 from fingermusic.vision.finger_detector import (
     CalibrationSession,
@@ -68,8 +69,17 @@ class FrameResult:
 class MusicEngine:
     """Coordina trackers de dedos, mapeo a notas, modos y calibración."""
 
-    def __init__(self, settings: DetectionSettings, song: Song, swap_hands: bool = False) -> None:
+    def __init__(
+        self,
+        settings: DetectionSettings,
+        songs: Song | Sequence[Song],
+        swap_hands: bool = False,
+    ) -> None:
         self._settings = settings
+        self._songs: tuple[Song, ...] = (songs,) if isinstance(songs, Song) else tuple(songs)
+        if not self._songs:
+            raise ValueError("Se necesita al menos una canción")
+        self._song_index = 0
         self._trackers: dict[HandSide, HandFingerTracker] = {
             side: HandFingerTracker(settings) for side in HandSide
         }
@@ -77,7 +87,7 @@ class MusicEngine:
         self._swap_hands = swap_hands
         self._finger_map: FingerMap = build_finger_map(swap_hands)
         self._mode = Mode.FREE
-        self._song_player = SongPlayer(song)
+        self._song_player = SongPlayer(self._songs[0])
         self._streak = 0
         self._best_streak = 0
         self._calibration: CalibrationSession | None = None
@@ -90,6 +100,16 @@ class MusicEngine:
     @property
     def song_player(self) -> SongPlayer:
         return self._song_player
+
+    @property
+    def songs(self) -> tuple[Song, ...]:
+        """Canciones disponibles."""
+        return self._songs
+
+    @property
+    def song_index(self) -> int:
+        """Posición (0-based) de la canción seleccionada."""
+        return self._song_index
 
     @property
     def best_streak(self) -> int:
@@ -121,6 +141,22 @@ class MusicEngine:
             self._streak = 0
         self._mode = mode
         logger.info("Modo: %s", mode.value)
+
+    def select_song(self, index: int) -> Song:
+        """Selecciona una canción (con vuelta circular), reiniciando su progreso y la racha."""
+        self._song_index = index % len(self._songs)
+        self._song_player = SongPlayer(self._songs[self._song_index])
+        self._streak = 0
+        logger.info("Cancion: %s", self._songs[self._song_index].title)
+        return self._songs[self._song_index]
+
+    def next_song(self) -> Song:
+        """Pasa a la canción siguiente (después de la última vuelve a la primera)."""
+        return self.select_song(self._song_index + 1)
+
+    def previous_song(self) -> Song:
+        """Vuelve a la canción anterior (antes de la primera va a la última)."""
+        return self.select_song(self._song_index - 1)
 
     def restart_song(self) -> None:
         """Reinicia la canción desde la primera nota y la racha."""

@@ -2,6 +2,19 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.1.5] - 2026-10-07
+
+### Added
+
+- Catálogo de 4 canciones de dominio público: Jingle Bells, Estrellita, Himno a la Alegría y Mary y su corderito.
+- Selector de canción en el modo canción: flechas `<` `>` en el panel o teclas `N` (siguiente) / `P` (anterior), con vuelta circular.
+- El panel indica cuántas manos necesita cada canción (Estrellita usa LA, por lo que requiere las dos manos).
+- Cambiar de canción reinicia su progreso y la racha; la mejor racha de la sesión se conserva.
+
+### Changed
+
+- `Song` y `parse_notes` pasan a `music/song.py`; `MusicEngine` acepta una canción o una lista de canciones.
+
 ## [0.1.4] - 2026-10-06
 
 ### Added
