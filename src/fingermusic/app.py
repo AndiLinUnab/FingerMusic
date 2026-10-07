@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 _FPS_SMOOTHING = 0.1
 _MAX_DETECTION_ERRORS = 30
+_PREVIEW_NOTE = "mi4"  # nota que suena al cambiar de instrumento
 _STREAK_MILESTONE = 10  # cada cuántos aciertos seguidos se muestra un mensaje
 
 
@@ -187,6 +188,10 @@ class Application:
             self._landmarks_on = not self._landmarks_on
         elif action is Action.TOGGLE_SOUND:
             self._toggle_sound()
+        elif action is Action.NEXT_INSTRUMENT:
+            instrument = self._audio.next_instrument()
+            self._audio.play(_PREVIEW_NOTE)  # una nota de muestra para oír el timbre
+            self._set_message(f"Instrumento: {instrument.label.title()}")
         elif action is Action.SWAP_HANDS:
             swapped = self._engine.toggle_swap_hands()
             self._set_message(
@@ -258,6 +263,7 @@ class Application:
             sound_on=self._audio.enabled,
             audio_available=self._audio.available,
             volume=self._audio.volume,
+            instrument_label=self._audio.instrument.label,
             swap_hands=self._engine.swap_hands,
             fps=self._fps,
             finger_map=self._engine.finger_map,

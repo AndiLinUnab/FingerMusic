@@ -105,7 +105,10 @@ def test_error_tone_is_harsher_than_a_note() -> None:
 
 def test_generate_all_sounds_includes_the_error_file(tmp_path: Path) -> None:
     paths = generate_all_sounds(tmp_path, note_duration=0.1, error_duration=0.1)
-    assert len(paths) == 11 and (tmp_path / "error.wav").exists()
+    assert len(paths) == 31  # 3 instrumentos x 10 notas + el sonido de error
+    assert (tmp_path / "error.wav").exists()
+    for instrument in ("piano", "xilofono", "flauta"):
+        assert (tmp_path / instrument / "do4.wav").exists()
 
 
 def test_the_repository_ships_the_error_sound() -> None:
@@ -129,8 +132,8 @@ def spied_manager(tmp_path: Path, **overrides: object) -> tuple[AudioManager, Sp
     manager = AudioManager(dataclasses.replace(AudioSettings(), sounds_dir=tmp_path, **overrides))
     assert manager.available, manager.error
     note, error = Spy(), Spy()
-    manager._sounds["mi4"] = note
-    manager._sounds["error"] = error
+    manager._banks[manager.instrument.key]["mi4"] = note
+    manager._error_sound = error
     return manager, note, error
 
 
@@ -138,6 +141,7 @@ def test_error_sound_is_loaded_and_playable(tmp_path: Path) -> None:
     manager = AudioManager(dataclasses.replace(AudioSettings(), sounds_dir=tmp_path))
     try:
         assert (tmp_path / "error.wav").exists()  # se generó al faltar
+        assert (tmp_path / "piano" / "do4.wav").exists()
         assert manager.play_error() is True
     finally:
         manager.close()

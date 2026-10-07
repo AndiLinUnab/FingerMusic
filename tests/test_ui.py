@@ -112,3 +112,28 @@ def test_keyboard_shortcuts_for_songs() -> None:
 
     assert _KEY_BINDINGS[ord("n")] is Action.NEXT_SONG
     assert _KEY_BINDINGS[ord("p")] is Action.PREVIOUS_SONG
+
+
+def test_instrument_button_shows_the_current_instrument(ui: Interface) -> None:
+    state = song_state(0)
+    state.instrument_label = "XILOFONO"
+    ui.render(None, state)
+    assert Action.NEXT_INSTRUMENT in {b.action for b in ui._buttons}
+    assert Action.QUIT in {b.action for b in ui._buttons}
+
+
+def test_clicking_the_instrument_button_queues_the_action(ui: Interface) -> None:
+    ui.render(None, song_state(0))
+    x, y, w, h = next(b.rect for b in ui._buttons if b.action is Action.NEXT_INSTRUMENT)
+    ui._on_mouse(cv2.EVENT_LBUTTONDOWN, x + w // 2, y + h // 2, 0, None)
+    assert ui._pending == [Action.NEXT_INSTRUMENT]
+
+
+def test_instrument_shortcut_and_buttons_fit_in_the_sidebar(ui: Interface) -> None:
+    from fingermusic.ui.interface import _KEY_BINDINGS, CANVAS_W, HEADER_H, VIDEO_H
+
+    assert _KEY_BINDINGS[ord("i")] is Action.NEXT_INSTRUMENT
+    ui.render(None, song_state(0))
+    for button in ui._buttons:
+        x, y, w, h = button.rect
+        assert x + w <= CANVAS_W and y + h <= HEADER_H + VIDEO_H, button.action

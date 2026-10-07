@@ -39,6 +39,7 @@ Todo en `src/fingermusic/config/settings.py` salvo notas y canción.
 | Rangos geométricos | `pip_angle_*`, `reach_ratio_*`, `thumb_*`, `angle_weight` |
 | Cámara | `CameraSettings.index`, `width`, `height`, `fps`, `mirror` (o `--camera N`) |
 | Volumen | `AudioSettings.volume`, `volume_step` |
+| Instrumento inicial | `AudioSettings.instrument` (`piano`, `xilofono`, `flauta`); en ejecución, tecla `I` |
 | Latencia de audio | `AudioSettings.buffer_size` (256; sube a 512 si hay chasquidos) |
 | Notas y mapeo por dedo | `audio/notes.py` (`NOTES`, `DEFAULT_HAND_NOTES`) |
 | Canciones | `music/catalog.py` (`build_songs()` y una función por canción) |

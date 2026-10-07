@@ -2,6 +2,20 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.1.7] - 2026-10-07
+
+### Added
+
+- Tres instrumentos con timbre propio, sintetizados: **piano** (parciales inarmónicos que se apagan más rápido en los agudos), **xilófono** (parciales 1:3:6, caída muy rápida y golpe inicial) y **flauta** (tono casi puro con vibrato, soplido y entrada/salida suaves).
+- Selector de instrumento: botón en el panel o tecla `I`; al cambiar suena una nota de muestra. `AudioSettings.instrument` define el inicial.
+- Todos los instrumentos se cargan al iniciar, por lo que el cambio es instantáneo.
+
+### Changed
+
+- Los sonidos de las notas ahora están en `assets/sounds/<instrumento>/<nota>.wav` (antes `assets/sounds/<nota>.wav`; esos archivos sueltos ya no se usan y pueden borrarse).
+- El botón SALIR comparte fila con el de instrumento.
+- Corregido el texto del panel del modo libre, que se solapaba y se cortaba por el borde.
+
 ## [0.1.6] - 2026-10-07
 
 ### Added

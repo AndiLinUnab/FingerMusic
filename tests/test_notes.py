@@ -70,5 +70,6 @@ def test_get_note() -> None:
 
 
 def test_wav_files_are_included_in_the_repository() -> None:
-    for note in NOTES:
-        assert (SOUNDS_DIR / f"{note.key}.wav").is_file(), note.key
+    for instrument in ("piano", "xilofono", "flauta"):
+        for note in NOTES:
+            assert (SOUNDS_DIR / instrument / f"{note.key}.wav").is_file(), (instrument, note.key)

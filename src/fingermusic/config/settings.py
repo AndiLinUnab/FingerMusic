@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from fingermusic.audio.instruments import get_instrument
+
 # Raíz del repositorio: .../FingerMusic (src/fingermusic/config/settings.py -> 4 niveles).
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[3]
 SOUNDS_DIR: Path = PROJECT_ROOT / "assets" / "sounds"
@@ -107,6 +109,8 @@ class AudioSettings:
     #: Si es ``True``, al fallar suena también la nota tocada además del sonido de error.
     error_plays_note: bool = False
     sounds_dir: Path = SOUNDS_DIR
+    #: Instrumento inicial: "piano", "xilofono" o "flauta" (se cambia con la tecla I).
+    instrument: str = "piano"
 
 
 @dataclass(frozen=True)
@@ -157,6 +161,10 @@ class Settings:
             raise ValueError("thumb_ratio_flexed debe ser menor que thumb_ratio_extended")
         if det.thumb_angle_flexed >= det.thumb_angle_extended:
             raise ValueError("thumb_angle_flexed debe ser menor que thumb_angle_extended")
+        try:
+            get_instrument(self.audio.instrument)
+        except KeyError as exc:
+            raise ValueError(f"Instrumento desconocido: {self.audio.instrument!r}") from exc
         if self.audio.error_duration <= 0:
             raise ValueError("error_duration debe ser positivo")
         if not 0.0 <= self.audio.volume <= 1.0:

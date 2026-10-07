@@ -47,4 +47,4 @@ pytest
 - Todas las rutas son relativas al repositorio: puedes clonarlo en cualquier carpeta.
 - No hace falta Internet para ejecutar; solo para `pip install`.
 - No se necesita archivo `.env`: no hay variables de entorno ni secretos.
-- Si borras `assets/sounds/*.wav`, se regeneran solos (o con `python run.py --regenerate-sounds`).
+- Si borras `assets/sounds/`, los `.wav` se regeneran solos (o con `python run.py --regenerate-sounds`).

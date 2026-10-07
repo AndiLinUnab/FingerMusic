@@ -1,10 +1,22 @@
 # Reproducción de audio
 
-## Generación de las notas
+## Instrumentos
 
-`audio/synth.py` sintetiza cada nota como suma de 4 armónicos (1, 2, 3 y 4 veces la frecuencia
-fundamental) con amplitudes 1, 0.45, 0.2 y 0.08, ataque de 5 ms, caída exponencial y cierre de 50 ms.
-Se normaliza a un pico de 0.8 y se guarda como WAV mono de 16 bits a 44.1 kHz (0.7 s).
+Cada instrumento se modela de forma distinta en `audio/synth.py` (todos mono, 16 bits, 44.1 kHz, 0.7 s, pico normalizado a 0.8):
+
+| Instrumento | Cómo se sintetiza | Cómo suena |
+|---|---|---|
+| **Piano** (`piano`) | 8 parciales ligeramente inarmónicos (`f·n·√(1+0.0004·n²)`); cada parcial cae con rapidez `2.2 + 1.1·n`, así que los agudos se apagan antes. Ataque de 3 ms | Cálido, con cola larga |
+| **Xilófono** (`xilofono`) | 3 parciales en proporción 1 : 3 : 6 (como las láminas afinadas de un xilófono) con caídas de 7, 22 y 40 por segundo, más un "golpe" de ruido de 3 ms | Seco, brillante y corto; sin segundo armónico |
+| **Flauta** (`flauta`) | Fundamental + 2.º (0.22) y 3.º (0.07) armónico, vibrato de 5.5 Hz (0.5 %) que aparece poco a poco, ruido de soplido suave y entrada/salida de 60/140 ms | Casi un tono puro, sostenido y suave |
+
+El ruido usa una semilla fija, así que los archivos generados son siempre idénticos. **Cambiar de instrumento:** botón del panel o tecla `I` (recorre piano → xilófono → flauta); suena una nota de muestra. El inicial se define en `AudioSettings.instrument`.
+
+Los archivos están en `assets/sounds/<instrumento>/<nota>.wav` (30 archivos) más `assets/sounds/error.wav`. `AudioManager` carga **todos** los instrumentos al iniciar (≈ 2.6 MB en memoria), por lo que el cambio es instantáneo y no hay lectura de disco al tocar.
+
+Para añadir un instrumento: crea su función de onda en `synth.py`, regístrala en `_VOICES` y en `INSTRUMENTS` (`audio/instruments.py`) y ejecuta `python run.py --regenerate-sounds`.
+
+## Generación de las notas
 
 | Nota | Clave | Hz | | Nota | Clave | Hz |
 |---|---|---|---|---|---|---|
@@ -14,7 +26,7 @@ Se normaliza a un pico de 0.8 y se guarda como WAV mono de 16 bits a 44.1 kHz (0
 | FA | fa4 | 349.23 | | RE' | re5 | 587.33 |
 | SOL | sol4 | 392.00 | | MI' | mi5 | 659.25 |
 
-Los archivos `assets/sounds/*.wav` están incluidos en el repositorio y fueron generados por este
+Los archivos `assets/sounds/**/*.wav` están incluidos en el repositorio y fueron generados por este
 mismo código; **no hay material con derechos de autor** (origen: síntesis propia, licencia MIT del proyecto).
 Se regeneran (notas y sonido de error) con `python run.py --regenerate-sounds` o automáticamente si faltan.
 

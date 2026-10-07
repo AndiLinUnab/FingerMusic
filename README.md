@@ -30,7 +30,7 @@ preentrenado (sin entrenar ninguna red desde cero).
 - Suavizado, histéresis, confirmación por frames y cooldown configurables.
 - **Calibración** de la posición de reposo de cada usuario.
 - **Modo libre** y **modo canción** (Jingle Bells) con nota actual, siguiente, progreso, acierto/error, **racha** de aciertos seguidos y **mejor racha** de la sesión.
-- Audio sin Internet y **sin material con copyright**: los tonos se generan por síntesis.
+- Audio sin Internet y **sin material con copyright**: los tonos se generan por síntesis, con **3 instrumentos** (piano, xilófono y flauta) que se cambian al instante.
 - Interfaz juguetona: cada nota tiene su color, las tarjetas rebotan al tocar, salen notas y chispas del dedo y hay confeti al completar la canción.
 - Manejo de errores (cámara, modelo, audio) con mensajes claros, logging y pruebas automáticas.
 
@@ -107,6 +107,7 @@ Todos los parámetros están en `src/fingermusic/config/settings.py`; no se nece
 | `smoothing_alpha` | `DetectionSettings` | Suavizado (menor = más suave, más lento) |
 | `pip_angle_*`, `reach_ratio_*`, `thumb_*` | `DetectionSettings` | Rangos geométricos de flexión |
 | `volume`, `buffer_size` | `AudioSettings` | Volumen inicial y latencia |
+| `instrument` | `AudioSettings` | Instrumento inicial (`piano`, `xilofono`, `flauta`) |
 | `error_plays_note`, `error_duration` | `AudioSettings` | Sonido de error del modo canción (si suena también la nota fallada) y su duración |
 
 Las notas están en `audio/notes.py` y la canción en `music/jingle_bells.py`.
@@ -141,6 +142,7 @@ Opciones: `--camera N` (otra cámara), `--swap-hands`, `--debug`, `--regenerate-
 | PUNTOS SI/NO | `L` | Muestra/oculta landmarks |
 | SONIDO SI/NO | `S` | Activa/desactiva el sonido |
 | CAMBIAR MANOS | `H` | Intercambia las notas de las manos |
+| INSTRUMENTO (PIANO / XILOFONO / FLAUTA) | `I` | Cambia el timbre (suena una nota de muestra) |
 | VOL − / VOL + | `-` / `+` | Volumen |
 | SALIR | `Q` / `Esc` | Cierra la aplicación |
 
@@ -199,8 +201,8 @@ FingerMusic/
 │   ├── ui/                 # interfaz OpenCV
 │   ├── config/             # parámetros centralizados
 │   └── utils/              # funciones matemáticas y logging
-├── tests/                  # pytest (134 pruebas)
-├── assets/sounds/          # 10 notas .wav generadas por el propio programa
+├── tests/                  # pytest (154 pruebas)
+├── assets/sounds/          # .wav por instrumento (piano, xilofono, flauta) + error.wav
 ├── docs/                   # documentación técnica
 └── screenshots/            # capturas para la demostración
 ```
@@ -216,8 +218,8 @@ compara con **dos umbrales** (histéresis), se **confirma durante varios frames*
 
 ## Reproducción de audio
 
-Los 10 tonos se **sintetizan** (armónicos + envolvente) y se guardan como `.wav` en
-`assets/sounds/`, de modo que no hay material con derechos de autor ni dependencia de Internet.
+Las notas se **sintetizan** con tres timbres (piano, xilófono y flauta; ver [docs/reproduccion_audio.md](docs/reproduccion_audio.md)) y se guardan como `.wav` en
+`assets/sounds/<instrumento>/`, de modo que no hay material con derechos de autor ni dependencia de Internet.
 `pygame.mixer` los reproduce con un buffer de 256 muestras y 16 canales (notas simultáneas).
 En el modo canción, una nota equivocada suena como un *buzzer* grave descendente (`error.wav`) en lugar de la nota. Si faltan los `.wav`, se regeneran solos. Ver [docs/reproduccion_audio.md](docs/reproduccion_audio.md).
 
@@ -287,7 +289,7 @@ pytest
 ruff check .
 ```
 
-Hay 134 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
+Hay 154 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
 confirmación), calibración, conversión de landmarks, mapeo dedo → nota, secuencia y avance de
 Jingle Bells, reinicio, configuración, síntesis y gestor de audio (con el driver `dummy`).
 Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámara real**.
@@ -296,7 +298,7 @@ Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámar
 
 Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvfb, sin cámara ni audio físicos):
 
-- ✅ Entorno virtual, instalación de `requirements.txt` y 134 pruebas aprobadas; `ruff` sin errores.
+- ✅ Entorno virtual, instalación de `requirements.txt` y 154 pruebas aprobadas; `ruff` sin errores.
 - ✅ El modelo MediaPipe Hands carga y procesa frames.
 - ✅ La aplicación inicia, abre la ventana, cambia de modo, calibra, activa/detiene la cámara y se cierra con código 0 (con una cámara simulada solo para esta verificación).
 - ✅ Sin cámara, muestra un mensaje claro y no se cierra.

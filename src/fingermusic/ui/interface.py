@@ -97,6 +97,7 @@ class Action(StrEnum):
     TOGGLE_LANDMARKS = "toggle_landmarks"
     TOGGLE_SOUND = "toggle_sound"
     SWAP_HANDS = "swap_hands"
+    NEXT_INSTRUMENT = "next_instrument"
     VOLUME_UP = "volume_up"
     VOLUME_DOWN = "volume_down"
     QUIT = "quit"
@@ -115,6 +116,7 @@ _KEY_BINDINGS: dict[int, Action] = {
     ord("l"): Action.TOGGLE_LANDMARKS,
     ord("s"): Action.TOGGLE_SOUND,
     ord("h"): Action.SWAP_HANDS,
+    ord("i"): Action.NEXT_INSTRUMENT,
     ord("+"): Action.VOLUME_UP,
     ord("="): Action.VOLUME_UP,
     ord("-"): Action.VOLUME_DOWN,
@@ -131,6 +133,7 @@ class ViewState:
     sound_on: bool = True
     audio_available: bool = True
     volume: float = 0.8
+    instrument_label: str = "PIANO"
     swap_hands: bool = False
     fps: float = 0.0
     finger_map: FingerMap = field(default_factory=dict)
@@ -611,13 +614,19 @@ class Interface:
         put_text(canvas, "NOTA SONANDO", (x0 + 16, y0 + 62), 0.5, TEXT_DIM)
         bounce = int(8 * max(0.0, 1.0 - state.last_note_age / _BOUNCE_SECONDS)) if playing else 0
         label = state.last_note_label if playing else None
-        self._draw_note_bubble(canvas, (x0 + 80, y0 + 125 - bounce), 42, label, 1.1, playing)
-        put_text(canvas, "Flexiona un dedo para", (x0 + 150, y0 + 115), 0.45, TEXT_DIM)
-        put_text(canvas, "tocar su nota!", (x0 + 150, y0 + 135), 0.45, TEXT_DIM)
-        put_text(canvas, "Mano izq: DO -> SOL", (x0 + 16, y0 + 215), 0.45, TEXT_DIM)
-        put_text(canvas, "(de menique a pulgar)", (x0 + 16, y0 + 232), 0.4, TEXT_DIM)
-        put_text(canvas, "Mano der: LA -> MI'", (x0 + 160, y0 + 215), 0.45, TEXT_DIM)
-        put_text(canvas, "(de pulgar a menique)", (x0 + 160, y0 + 232), 0.4, TEXT_DIM)
+        self._draw_note_bubble(canvas, (x0 + 62, y0 + 120 - bounce), 36, label, 1.0, playing)
+        put_text(canvas, "Flexiona un dedo", (x0 + 120, y0 + 112), 0.45, TEXT_DIM)
+        put_text(canvas, "para tocar su", (x0 + 120, y0 + 132), 0.45, TEXT_DIM)
+        put_text(canvas, "nota!", (x0 + 120, y0 + 152), 0.45, TEXT_DIM)
+        put_text(
+            canvas, "Mano izq: DO -> SOL (de menique a pulgar)", (x0 + 16, y0 + 190), 0.38, TEXT_DIM
+        )
+        put_text(
+            canvas, "Mano der: LA -> MI' (de pulgar a menique)", (x0 + 16, y0 + 212), 0.38, TEXT_DIM
+        )
+        put_text(
+            canvas, "Instrumento: tecla I   Calibrar: tecla C", (x0 + 16, y0 + 234), 0.38, TEXT_DIM
+        )
 
     def _draw_song_selector(self, canvas: np.ndarray, state: ViewState, x0: int, y0: int) -> None:
         """Flechas para cambiar de canción, título, número de manos, posición y récord."""
@@ -727,6 +736,7 @@ class Interface:
             (Action.SWAP_HANDS, "CAMBIAR MANOS [H]", state.swap_hands, _RAINBOW[9]),
             (Action.VOLUME_DOWN, "VOL - [-]", False, _RAINBOW[6]),
             (Action.VOLUME_UP, "VOL + [+]", False, _RAINBOW[8]),
+            (Action.NEXT_INSTRUMENT, f"{state.instrument_label} [I]", False, _RAINBOW[4]),
             (Action.QUIT, "SALIR [Q]", False, (90, 90, 190)),
         ]
         width, height, gap = (SIDEBAR_W - 36) // 2, 32, 6
@@ -734,7 +744,7 @@ class Interface:
             col, row = i % 2, i // 2
             bx = x0 + 12 + col * (width + 12)
             by = y0 + row * (height + gap)
-            bw = SIDEBAR_W - 24 if action is Action.QUIT else width
+            bw = width
             self._buttons.append(_Button(action, (bx, by, bw, height)))
             rounded_rect(
                 canvas,
