@@ -2,6 +2,30 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.1.9] - 2026-10-09
+
+### Changed
+
+- `LICENSE` pasa a ser un aviso de derechos de autor (todos los derechos reservados) y se quita la insignia de licencia del README.
+
+## [0.1.8] - 2026-10-08
+
+### Changed
+
+- **La interfaz migra de OpenCV a Tkinter**: los textos y paneles son elementos de un `Canvas`, así que ahora llevan **tildes y ñ** (Índice, Meñique, MODO CANCIÓN, CÁMARA, ¡GENIAL!, mensajes de error…). Tkinter viene incluido con Python: no hay dependencias nuevas.
+- El video (mano, notas flotantes y confeti) se sigue componiendo con OpenCV (`ui/video_painter.py`) y se muestra como imagen.
+- La interfaz se divide en `ui/common.py` (tipos y colores), `ui/layout.py` (botones y teclas, sin pantalla), `ui/video_painter.py` e `ui/interface.py` (ventana Tkinter).
+- Los textos de la ventana se reutilizan entre frames (solo se reconfiguran los que cambian), lo que reduce el coste de dibujar los paneles de ~13 ms a ~1-2 ms.
+- Los mensajes largos del pie (p. ej. errores de cámara) se ajustan a dos líneas.
+- Títulos con tilde: `HIMNO A LA ALEGRÍA`, `XILÓFONO`; `Finger.label` pasa a `Índice` y `Meñique`.
+
+### Added
+
+- Teclas `←` / `→` para cambiar de canción.
+- Si falta Tkinter o no hay pantalla, el programa muestra un mensaje claro en lugar de un traceback.
+- Pruebas de la ventana (`tests/test_tk_interface.py`, se omiten sin pantalla), del diseño (`test_layout.py`) y del pintor de video (`test_video_painter.py`); `tests/test_ui.py` se reduce a las pruebas de la API pública.
+
+
 ## [0.1.7] - 2026-10-07
 
 ### Added

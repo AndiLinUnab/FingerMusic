@@ -3,7 +3,6 @@
 **Instrumento musical virtual mediante visión por computador**
 
 ![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue)
-![Licencia](https://img.shields.io/badge/licencia-MIT-green)
 ![Pruebas](https://img.shields.io/badge/pruebas-pytest-informational)
 
 ## Descripción
@@ -39,7 +38,8 @@ preentrenado (sin entrenar ninguna red desde cero).
 | Componente | Tecnología |
 |---|---|
 | Lenguaje | Python 3.11 |
-| Captura e interfaz | OpenCV (`opencv-contrib-python`) |
+| Captura de video | OpenCV (`opencv-contrib-python`) |
+| Interfaz gráfica | Tkinter (incluido con Python) |
 | Modelo de IA | MediaPipe Hands (Google) |
 | Cálculo | NumPy |
 | Audio | pygame (`pygame.mixer`) |
@@ -65,7 +65,7 @@ flowchart TD
     MAP --> AUD[Motor de audio<br/>pygame.mixer]
     AUD --> SND((Sonido))
     MAP --> SONG[Modo canción<br/>SongPlayer]
-    FD --> UI[Interfaz gráfica<br/>OpenCV]
+    FD --> UI[Interfaz gráfica<br/>Tkinter + OpenCV]
     ST --> UI
     SONG --> UI
     UI --> USER((Información visual al usuario))
@@ -76,7 +76,7 @@ Más detalle en [docs/arquitectura.md](docs/arquitectura.md).
 ## Requisitos
 
 - Windows 10/11 (también funciona en otros sistemas con cámara y audio).
-- Python **3.11** (se probó también con 3.12).
+- Python **3.11** (se probó también con 3.12) con **Tkinter** (viene incluido; en el instalador de Windows déjalo marcado como *tcl/tk and IDLE*).
 - Cámara web y altavoces/auriculares.
 - Visual Studio Code (recomendado) con la extensión *Python*.
 
@@ -134,16 +134,16 @@ Opciones: `--camera N` (otra cámara), `--swap-hands`, `--debug`, `--regenerate-
 | Botón | Tecla | Acción |
 |---|---|---|
 | MODO LIBRE | `1` | Toca cualquier nota |
-| MODO CANCION | `2` | Jingle Bells guiado |
+| MODO CANCIÓN | `2` | Jingle Bells guiado |
 | REINICIAR | `R` | Reinicia la canción |
 | `<` `>` (en el panel) | `P` / `N` | Canción anterior / siguiente |
 | CALIBRAR | `C` | Calibra la mano abierta (2 s) |
-| CAMARA ON/OFF | `Espacio` | Inicia o detiene la cámara |
-| PUNTOS SI/NO | `L` | Muestra/oculta landmarks |
-| SONIDO SI/NO | `S` | Activa/desactiva el sonido |
+| CÁMARA ON/OFF | `Espacio` | Inicia o detiene la cámara |
+| PUNTOS SÍ/NO | `L` | Muestra/oculta landmarks |
+| SONIDO SÍ/NO | `S` | Activa/desactiva el sonido |
 | CAMBIAR MANOS | `H` | Intercambia las notas de las manos |
 | INSTRUMENTO (PIANO / XILOFONO / FLAUTA) | `I` | Cambia el timbre (suena una nota de muestra) |
-| VOL − / VOL + | `-` / `+` | Volumen |
+| VOLUMEN − / + | `-` / `+` | Volumen |
 | SALIR | `Q` / `Esc` | Cierra la aplicación |
 
 ## Cómo tocar una nota
@@ -198,10 +198,10 @@ FingerMusic/
 │   ├── vision/             # landmarks, MediaPipe, detección de dedos
 │   ├── audio/              # notas, síntesis de tonos, reproducción
 │   ├── music/              # modelo de canción, catálogo y seguimiento
-│   ├── ui/                 # interfaz OpenCV
+│   ├── ui/                 # interfaz Tkinter (ventana), diseño, y pintor del video (OpenCV)
 │   ├── config/             # parámetros centralizados
 │   └── utils/              # funciones matemáticas y logging
-├── tests/                  # pytest (154 pruebas)
+├── tests/                  # pytest (215 pruebas)
 ├── assets/sounds/          # .wav por instrumento (piano, xilofono, flauta) + error.wav
 ├── docs/                   # documentación técnica
 └── screenshots/            # capturas para la demostración
@@ -247,7 +247,7 @@ Espacio reservado para material de la demostración (añádelo tú; no se incluy
 
 - **Problema:** ¿cómo tocar una melodía sin un instrumento físico?
 - **Solución:** visión por computador que detecta el movimiento de los dedos y lo convierte en eventos musicales.
-- **Tecnologías:** Python + OpenCV + MediaPipe Hands + pygame.
+- **Tecnologías:** Python + OpenCV + Tkinter + MediaPipe Hands + pygame.
 - **Inteligencia artificial:** modelo preentrenado de landmarks de mano (solo localiza puntos).
 - **Procesamiento:** cámara → imagen → modelo → landmarks → geometría → estado del dedo → nota → audio.
 - **Resultado:** interpretación de Jingle Bells en tiempo real.
@@ -270,7 +270,7 @@ Resumen (completo en [docs/troubleshooting.md](docs/troubleshooting.md)):
 - Con poca luz, fondos confusos u oclusión el modelo puede perder la mano.
 - El pulgar flexiona hacia la palma (no "hacia abajo"), por lo que es el dedo más difícil de medir.
 - Las 10 notas requieren dos manos; con una sola mano hay 5.
-- La interfaz no muestra tildes ni la ñ (limitación de las fuentes de OpenCV).
+- La interfaz usa Tkinter: la letra depende del sistema (Segoe UI en Windows) y en pantallas con escalado alto la ventana puede verse algo borrosa.
 - Se usa la API clásica `mediapipe.solutions` fijada en `mediapipe==0.10.21` (Google la considera *legacy*).
 
 ## Mejoras futuras
@@ -278,7 +278,7 @@ Resumen (completo en [docs/troubleshooting.md](docs/troubleshooting.md)):
 - Migrar a la API *Hand Landmarker* (MediaPipe Tasks) cuando se pueda distribuir el modelo `.task`.
 - Más canciones, acordes y selección de instrumento/timbre.
 - Calibración también de la mano cerrada (rango completo por dedo).
-- Interfaz con Tkinter/PySide para texto con tildes y más controles.
+- Ventana redimensionable y compatible con pantallas de alta densidad (DPI).
 - Medir la latencia extremo a extremo.
 
 ## Pruebas
@@ -289,7 +289,7 @@ pytest
 ruff check .
 ```
 
-Hay 154 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
+Hay 215 pruebas que cubren: geometría de flexión, cambios de estado (histéresis, cooldown,
 confirmación), calibración, conversión de landmarks, mapeo dedo → nota, secuencia y avance de
 Jingle Bells, reinicio, configuración, síntesis y gestor de audio (con el driver `dummy`).
 Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámara real**.
@@ -298,7 +298,7 @@ Las pruebas usan manos sintéticas con geometría coherente; **no usan la cámar
 
 Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvfb, sin cámara ni audio físicos):
 
-- ✅ Entorno virtual, instalación de `requirements.txt` y 154 pruebas aprobadas; `ruff` sin errores.
+- ✅ Entorno virtual, instalación de `requirements.txt` y 215 pruebas aprobadas (28 de ellas, las de la ventana Tkinter, se ejecutaron con una pantalla virtual y se omiten si no hay pantalla); `ruff` sin errores.
 - ✅ El modelo MediaPipe Hands carga y procesa frames.
 - ✅ La aplicación inicia, abre la ventana, cambia de modo, calibra, activa/detiene la cámara y se cierra con código 0 (con una cámara simulada solo para esta verificación).
 - ✅ Sin cámara, muestra un mensaje claro y no se cierra.
@@ -306,6 +306,7 @@ Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvf
 
 **No verificado** (requiere hardware real; probar en tu portátil):
 
+- ⚠️ El aspecto de la ventana **en Windows** (fuente Segoe UI, escalado de pantalla): se verificó con la fuente DejaVu Sans, que es más ancha, y que todo el texto cabe.
 - ⚠️ Detección sobre una **mano real** y ajuste de los umbrales con personas reales.
 - ⚠️ **Sonido audible** y su latencia real en Windows.
 - ⚠️ Ejecución en **Windows con Python 3.11** (las versiones de `requirements.txt` tienen ruedas para esa plataforma, pero no se instalaron allí).
@@ -313,7 +314,9 @@ Verificado en el entorno de desarrollo (Linux, Python 3.12, pantalla virtual Xvf
 
 ## Licencia
 
-[MIT](LICENSE) © 2026 Andi Lin.
+Copyright © 2026 Andi Lin. Todos los derechos reservados. Ver [LICENSE](LICENSE).
+
+Las bibliotecas de terceros (MediaPipe, OpenCV, NumPy, pygame…) se rigen por sus propias licencias.
 
 ## Autor
 

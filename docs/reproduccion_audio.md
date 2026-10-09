@@ -27,7 +27,7 @@ Para añadir un instrumento: crea su función de onda en `synth.py`, regístrala
 | SOL | sol4 | 392.00 | | MI' | mi5 | 659.25 |
 
 Los archivos `assets/sounds/**/*.wav` están incluidos en el repositorio y fueron generados por este
-mismo código; **no hay material con derechos de autor** (origen: síntesis propia, licencia MIT del proyecto).
+mismo código; **no hay material con derechos de autor** (origen: síntesis propia del proyecto).
 Se regeneran (notas y sonido de error) con `python run.py --regenerate-sounds` o automáticamente si faltan.
 
 ## Sonido de error (modo canción)
